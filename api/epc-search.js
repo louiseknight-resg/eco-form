@@ -1,7 +1,8 @@
 // /api/epc-search.js
-// POST { postcode, addressLabel? } -> { found, band?, lmkKey?, certificateDate? }
+// POST { postcode, uprn? } -> { found, band?, lmkKey?, certificateDate?, region }
 
 const UK_POSTCODE = /^[A-Z]{1,2}\d[A-Z\d]?\s?\d[A-Z]{2}$/i;
+const SCOT_PREFIXES = ["AB","DD","DG","EH","FK","G","HS","IV","KA","KW","KY","ML","PA","PH","TD","ZE"];
 
 function normalizePostcode(raw = "") {
   const alnum = raw.replace(/[^A-Za-z0-9]/g, "").toUpperCase();
@@ -9,137 +10,104 @@ function normalizePostcode(raw = "") {
   return alnum.replace(/([A-Z0-9]{3})$/, " $1");
 }
 
-function norm(s = "") {
-  return String(s).toLowerCase().replace(/\s+/g, " ").trim();
-}
-
-function toISODate(s) {
-  // Many EPC fields are '2023-09-14', sometimes with time. We keep the date part.
-  if (!s) return null;
-  const m = String(s).match(/^\d{4}-\d{2}-\d{2}/);
-  return m ? m[0] : null;
-}
-
-// Simple token overlap score for address matching (0..1)
-function addressScore(a = "", b = "") {
-  const A = new Set(norm(a).split(/[,\s]+/).filter(Boolean));
-  const B = new Set(norm(b).split(/[,\s]+/).filter(Boolean));
-  if (!A.size || !B.size) return 0;
-  let inter = 0;
-  for (const t of A) if (B.has(t)) inter++;
-  const union = A.size + B.size - inter;
-  return inter / union; // Jaccard
+function applyCORS(req, res) {
+  res.setHeader("Access-Control-Allow-Origin", "*"); // tighten to your domain later
+  res.setHeader("Access-Control-Allow-Methods", "GET,POST,OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type,Authorization");
+  if (req.method === "OPTIONS") { res.status(204).end(); return true; }
+  return false;
 }
 
 async function readJson(req) {
   const bufs = [];
   for await (const c of req) bufs.push(c);
-  const txt = Buffer.concat(bufs).toString("utf8") || "{}";
-  return JSON.parse(txt);
+  return JSON.parse(Buffer.concat(bufs).toString("utf8") || "{}");
 }
 
-async function getJSON(url, headers, retries = 2) {
-  for (let i = 0; i <= retries; i++) {
-    const r = await fetch(url, { headers });
-    if (r.ok) return r.json();
-    // 429/5xx: small backoff then retry
-    if (r.status >= 500 || r.status === 429) await new Promise(s => setTimeout(s, 300 * (i + 1)));
-    else {
-      const txt = await r.text().catch(() => "");
-      throw new Error(`EPC search failed: ${r.status} ${txt}`);
-    }
+async function getJSON(url, opts) {
+  const r = await fetch(url, opts);
+  if (!r.ok) {
+    const t = await r.text().catch(() => "");
+    throw new Error(`${r.status} ${t || "Request failed"}`);
   }
-  throw new Error("EPC search failed after retries");
+  return r.json();
+}
+
+function isScottishPostcode(pc) {
+  const p = pc.replace(/\s+/g, "").toUpperCase();
+  const area = p.match(/^[A-Z]{1,2}/)?.[0] || "";
+  return SCOT_PREFIXES.includes(area);
+}
+
+function toISODate(s) {
+  if (!s) return null;
+  const m = String(s).match(/^\d{4}-\d{2}-\d{2}/);
+  return m ? m[0] : null;
+}
+
+// Build EPC auth header from env (supports EITHER Basic token or user/pass)
+function epcHeaders() {
+  const token = process.env.EPC_AUTH_BASIC; // e.g. "Basic abc123=="
+  let auth = token;
+  if (!auth) {
+    const user = process.env.EPC_USERNAME || "";
+    const pass = process.env.EPC_PASSWORD || "";
+    if (!user || !pass) throw new Error("EPC credentials missing");
+    auth = `Basic ${Buffer.from(`${user}:${pass}`).toString("base64")}`;
+  }
+  return { Authorization: auth, Accept: "application/json" };
+}
+
+// England & Wales lookup (by UPRN preferred; postcode fallback)
+async function lookupEpcEW({ postcode, uprn }) {
+  const headers = epcHeaders();
+  const params = uprn
+    ? `uprn=${encodeURIComponent(uprn)}`
+    : `postcode=${encodeURIComponent(postcode)}&size=80`;
+
+  const url = `https://epc.opendatacommunities.org/api/v1/domestic/search?${params}`;
+  const data = await getJSON(url, { headers });
+
+  const rows = Array.isArray(data) ? data : (Array.isArray(data.rows) ? data.rows : []);
+  if (!rows.length) return { found: false, region: "ENGLAND_WALES" };
+
+  // Pick latest certificate by lodgement_date
+  rows.sort((a, b) => new Date(b.lodgement_date) - new Date(a.lodgement_date));
+  const top = rows[0];
+
+  return {
+    found: !!top.current_energy_rating,
+    band: top.current_energy_rating || null,
+    lmkKey: top.lmk_key || null,
+    certificateDate: toISODate(top.lodgement_date) || null,
+    region: "ENGLAND_WALES"
+  };
+}
+
+// Scotland adapter (stub for now – wire your API later if you want)
+async function lookupEpcScotland({ postcode, uprn }) {
+  // If you have a Scottish EPC API, plug it in here (similar shape).
+  // For now, return "not found" so your form continues normally.
+  return { found: false, region: "SCOTLAND" };
 }
 
 export default async function handler(req, res) {
+  if (applyCORS(req, res)) return;
+
   try {
-    if (req.method !== "POST") {
-      return res.status(405).json({ error: "POST only" });
-    }
+    if (req.method !== "POST") return res.status(405).json({ error: "POST only" });
 
-    const { postcode: rawPc = "", addressLabel = "" } = await readJson(req);
+    const { postcode: rawPc = "", uprn = "" } = await readJson(req);
 
-    // 1) Clean + validate postcode
     const postcode = normalizePostcode(rawPc);
-    if (!UK_POSTCODE.test(postcode)) {
-      return res.status(400).json({ error: "Bad postcode" });
-    }
+    if (!UK_POSTCODE.test(postcode)) return res.status(400).json({ error: "Bad postcode" });
 
-    // 2) EPC auth headers
-    const user = process.env.EPC_USERNAME || "";
-    const pass = process.env.EPC_PASSWORD || "";
-    if (!user || !pass) {
-      return res.status(500).json({ error: "Server not configured: EPC credentials missing" });
-    }
-    const basic = Buffer.from(`${user}:${pass}`).toString("base64");
-    const headers = {
-      "Authorization": `Basic ${basic}`,
-      "Accept": "application/json"
-    };
+    const result = isScottishPostcode(postcode)
+      ? await lookupEpcScotland({ postcode, uprn })
+      : await lookupEpcEW({ postcode, uprn });
 
-    // 3) Search EPC by postcode (limit size for performance)
-    const epcUrl = `https://epc.opendatacommunities.org/api/v1/domestic/search?postcode=${encodeURIComponent(postcode)}&size=80`;
-    const data = await getJSON(epcUrl, headers);
-
-    // API sometimes returns { rows: [...] } or just an array
-    const rows = Array.isArray(data) ? data : Array.isArray(data.rows) ? data.rows : [];
-
-    if (!rows.length) {
-      // No records for this postcode
-      return res.status(200).json({ found: false });
-    }
-
-    // 4) Choose best match
-    const target = norm(addressLabel);
-    let picked = null;
-
-    if (target) {
-      // Score each record by address similarity + recency boost
-      let bestScore = -1;
-      for (const rec of rows) {
-        const addr = [rec.address1, rec.address2, rec.posttown, rec.postcode].filter(Boolean).join(", ");
-        const score = addressScore(addr, addressLabel);
-        // Light recency boost
-        const lodgement = toISODate(rec.lodgement_date) || toISODate(rec.inspection_date);
-        const recentBoost = lodgement ? (Date.parse(lodgement) / 1e13) : 0; // tiny bump
-        const finalScore = score + recentBoost;
-        if (finalScore > bestScore) {
-          bestScore = finalScore;
-          picked = { rec, addr, lodgement };
-        }
-      }
-    }
-
-    if (!picked) {
-      // No label or no good score → pick most recent certificate in that postcode
-      let best = null;
-      for (const rec of rows) {
-        const lodgement = toISODate(rec.lodgement_date) || toISODate(rec.inspection_date);
-        if (!best) best = { rec, lodgement };
-        else {
-          const a = Date.parse(lodgement || "1970-01-01");
-          const b = Date.parse(best.lodgement || "1970-01-01");
-          if (a > b) best = { rec, lodgement };
-        }
-      }
-      picked = best;
-    }
-
-    if (!picked || !picked.rec) {
-      return res.status(200).json({ found: false });
-    }
-
-    const band = picked.rec.current_energy_rating || null;
-    return res.status(200).json({
-      found: !!band,
-      band,
-      lmkKey: picked.rec.lmk_key || null,
-      certificateDate: picked.lodgement || null
-    });
+    return res.status(200).json(result);
   } catch (err) {
-    // Hide internal details from the client
     return res.status(502).json({ error: "EPC lookup failed" });
   }
 }
-
