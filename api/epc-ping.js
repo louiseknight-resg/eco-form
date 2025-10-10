@@ -17,19 +17,17 @@ function epcHeaders() {
 }
 
 export default async function handler(req, res) {
-  if (applyCORS(req, res)) return;
   try {
-    const headers = epcHeaders();
-    // EPC expects NO SPACE in postcode
-    const url = "https://epc.opendatacommunities.org/api/v1/domestic/search?postcode=SW1A2AA&size=5";
+    const headers = {
+      Authorization: process.env.EPC_AUTH_BASIC,
+      Accept: "application/json",
+    };
+    const url = "https://epc.opendatacommunities.org/api/v1/domestic/search?postcode=PR82EG&size=50";
     const r = await fetch(url, { headers });
     const text = await r.text();
-    return res.status(200).json({
-      ok: r.ok,
-      status: r.status,
-      sample: text.slice(0, 1500) // first bit of response for inspection
-    });
-  } catch (e) {
-    return res.status(200).json({ ok: false, error: String(e) });
+    return res.status(200).send(text);
+  } catch (err) {
+    return res.status(500).json({ error: err.message });
   }
 }
+
