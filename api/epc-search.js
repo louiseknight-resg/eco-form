@@ -61,9 +61,10 @@ function epcHeaders() {
 // England & Wales lookup (by UPRN preferred; postcode fallback)
 async function lookupEpcEW({ postcode, uprn }) {
   const headers = epcHeaders();
-  const params = uprn
-    ? `uprn=${encodeURIComponent(uprn)}`
-    : `postcode=${encodeURIComponent(postcode)}&size=80`;
+  const pcNoSpace = postcode.replace(/\s+/g, "");
+const params = uprn
+  ? `uprn=${encodeURIComponent(uprn)}`
+  : `postcode=${encodeURIComponent(pcNoSpace)}&size=100`;
 
   const url = `https://epc.opendatacommunities.org/api/v1/domestic/search?${params}`;
   const data = await getJSON(url, { headers });
