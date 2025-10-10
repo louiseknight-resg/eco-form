@@ -39,6 +39,11 @@ function isScottishPostcode(pc) {
   return SCOT_PREFIXES.includes(area);
 }
 
+// ---- helpers for EPC rows (API sometimes uses hyphenated keys) ----
+function getField(obj, ...keys) {
+  for (const k of keys) if (obj && obj[k] != null) return obj[k];
+  return null;
+}
 function toISODate(s) {
   if (!s) return null;
   const m = String(s).match(/^\d{4}-\d{2}-\d{2}/);
@@ -58,37 +63,58 @@ function epcHeaders() {
   return { Authorization: auth, Accept: "application/json" };
 }
 
-// England & Wales lookup (by UPRN preferred; postcode fallback)
+// ---------- England & Wales lookup (UPRN preferred; postcode fallback) ----------
 async function lookupEpcEW({ postcode, uprn }) {
   const headers = epcHeaders();
-  const pcNoSpace = postcode.replace(/\s+/g, "");
-const params = uprn
-  ? `uprn=${encodeURIComponent(uprn)}`
-  : `postcode=${encodeURIComponent(pcNoSpace)}&size=100`;
+  const pcNoSpace = (postcode || "").replace(/\s+/g, "");
 
-  const url = `https://epc.opendatacommunities.org/api/v1/domestic/search?${params}`;
-  const data = await getJSON(url, { headers });
+  // 1) Try UPRN (exact)
+  if (uprn) {
+    const urlU = `https://epc.opendatacommunities.org/api/v1/domestic/search?uprn=${encodeURIComponent(uprn)}`;
+    const dataU = await getJSON(urlU, { headers }).catch(() => null);
+    const rowsU = dataU ? (Array.isArray(dataU) ? dataU : (Array.isArray(dataU.rows) ? dataU.rows : [])) : [];
+    if (rowsU.length) {
+      rowsU.sort((a, b) =>
+        new Date(getField(b, "lodgement_date", "lodgement-date") || 0) -
+        new Date(getField(a, "lodgement_date", "lodgement-date") || 0)
+      );
+      const rec = rowsU[0];
+      const band = getField(rec, "current_energy_rating", "current-energy-rating");
+      return {
+        found: !!band,
+        band,
+        lmkKey: getField(rec, "lmk_key", "lmk-key"),
+        certificateDate: toISODate(getField(rec, "lodgement_date", "lodgement-date")),
+        region: "ENGLAND_WALES",
+      };
+    }
+    // fall through if no rows for that UPRN
+  }
 
-  const rows = Array.isArray(data) ? data : (Array.isArray(data.rows) ? data.rows : []);
-  if (!rows.length) return { found: false, region: "ENGLAND_WALES" };
+  // 2) Postcode fallback (no space)
+  const urlP = `https://epc.opendatacommunities.org/api/v1/domestic/search?postcode=${encodeURIComponent(pcNoSpace)}&size=100`;
+  const dataP = await getJSON(urlP, { headers }).catch(() => null);
+  const rowsP = dataP ? (Array.isArray(dataP) ? dataP : (Array.isArray(dataP.rows) ? dataP.rows : [])) : [];
+  if (!rowsP.length) return { found: false, region: "ENGLAND_WALES" };
 
-  // Pick latest certificate by lodgement_date
-  rows.sort((a, b) => new Date(b.lodgement_date) - new Date(a.lodgement_date));
-  const top = rows[0];
+  rowsP.sort((a, b) =>
+    new Date(getField(b, "lodgement_date", "lodgement-date") || 0) -
+    new Date(getField(a, "lodgement_date", "lodgement-date") || 0)
+  );
+  const rec = rowsP[0];
+  const band = getField(rec, "current_energy_rating", "current-energy-rating");
 
   return {
-    found: !!top.current_energy_rating,
-    band: top.current_energy_rating || null,
-    lmkKey: top.lmk_key || null,
-    certificateDate: toISODate(top.lodgement_date) || null,
-    region: "ENGLAND_WALES"
+    found: !!band,
+    band,
+    lmkKey: getField(rec, "lmk_key", "lmk-key"),
+    certificateDate: toISODate(getField(rec, "lodgement_date", "lodgement-date")),
+    region: "ENGLAND_WALES",
   };
 }
 
-// Scotland adapter (stub for now – wire your API later if you want)
+// ---------- Scotland adapter (stub for now – wire your API later) ----------
 async function lookupEpcScotland({ postcode, uprn }) {
-  // If you have a Scottish EPC API, plug it in here (similar shape).
-  // For now, return "not found" so your form continues normally.
   return { found: false, region: "SCOTLAND" };
 }
 
@@ -99,7 +125,6 @@ export default async function handler(req, res) {
     if (req.method !== "POST") return res.status(405).json({ error: "POST only" });
 
     const { postcode: rawPc = "", uprn = "" } = await readJson(req);
-
     const postcode = normalizePostcode(rawPc);
     if (!UK_POSTCODE.test(postcode)) return res.status(400).json({ error: "Bad postcode" });
 
