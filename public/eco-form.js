@@ -498,19 +498,14 @@ function viewStep5() {
   stepWrap.innerHTML = "";
 
   const band = state.epc?.band || "N/A";
-  const req = () => el("span", { className: "required-asterisk" }, " *");
 
   stepWrap.append(
     el("h2", {}, "Contact Details"),
-    el(
-      "p",
-      { className: "helper" },
-      "Please provide your details so we can confirm your eligibility."
-    ),
+    el("p", { className: "helper" }, "Please provide your details so we can confirm your eligibility."),
     el("div", { className: "epc" }, `EPC: Band ${band}`),
 
-    // homeowner
-    el("label", {}, "Are you the homeowner?", req()),
+    // homeowner (required)
+    el("label", { "data-required": "true" }, "Are you the homeowner?"),
     el(
       "select",
       { id: "q-homeowner" },
@@ -519,48 +514,33 @@ function viewStep5() {
       el("option", { value: "no" }, "No")
     ),
 
-    // name row
-    el(
-      "div",
-      { className: "row" },
-      el(
-        "div",
-        {},
-        el("label", {}, "First name", req()),
+    // name row (required)
+    el("div", { className: "row" },
+      el("div", {},
+        el("label", { "data-required": "true" }, "First name"),
         el("input", { type: "text", id: "q-first" })
       ),
-      el(
-        "div",
-        {},
-        el("label", {}, "Last name", req()),
+      el("div", {},
+        el("label", { "data-required": "true" }, "Last name"),
         el("input", { type: "text", id: "q-last" })
       )
     ),
 
-    // phone + email row
-    el(
-      "div",
-      { className: "row" },
-      el(
-        "div",
-        {},
-        el("label", {}, "Mobile", req()),
+    // phone + email row (required)
+    el("div", { className: "row" },
+      el("div", {},
+        el("label", { "data-required": "true" }, "Mobile"),
         el("input", { type: "tel", id: "q-phone", placeholder: "07…" })
       ),
-      el(
-        "div",
-        {},
-        el("label", {}, "Email", req()),
+      el("div", {},
+        el("label", { "data-required": "true" }, "Email"),
         el("input", { type: "email", id: "q-email", placeholder: "you@domain.com" })
       )
     ),
 
-    // consent
-    el(
-      "label",
-      {},
+    // consent (required)
+    el("label", { "data-required": "true" },
       el("input", { type: "checkbox", id: "q-consent" }),
-      req(),
       " I agree to be contacted about eligibility."
     ),
 
@@ -568,21 +548,22 @@ function viewStep5() {
     backButton(viewStep4)
   );
 
-  $("#btn-submit").onclick = async () => {
-    const homeowner = $("#q-homeowner").value;
-    const firstName = $("#q-first").value.trim();
-    const lastName  = $("#q-last").value.trim();
-    const phone     = $("#q-phone").value.trim();
-    const email     = $("#q-email").value.trim();
-    const consent   = $("#q-consent").checked;
+  // submit handler with mandatory checks
+  document.getElementById("btn-submit").onclick = async () => {
+    const homeowner = document.getElementById("q-homeowner").value;
+    const firstName = document.getElementById("q-first").value.trim();
+    const lastName  = document.getElementById("q-last").value.trim();
+    const phone     = document.getElementById("q-phone").value.trim();
+    const email     = document.getElementById("q-email").value.trim();
+    const consent   = document.getElementById("q-consent").checked;
 
     // Required field checks
     if (!homeowner) return alert("Please select whether you are the homeowner.");
     if (!firstName) return alert("Please enter your first name.");
-    if (!lastName) return alert("Please enter your last name.");
-    if (!phone) return alert("Please enter your mobile number.");
-    if (!email) return alert("Please enter your email address.");
-    if (!consent) return alert("Please tick the consent box to continue.");
+    if (!lastName)  return alert("Please enter your last name.");
+    if (!phone)     return alert("Please enter your mobile number.");
+    if (!email)     return alert("Please enter your email address.");
+    if (!consent)   return alert("Please tick the consent box to continue.");
 
     const payload = {
       status: "qualified",
@@ -602,7 +583,8 @@ function viewStep5() {
       consent
     };
 
-    $("#btn-submit").disabled = true;
+    const btn = document.getElementById("btn-submit");
+    btn.disabled = true;
     try {
       await j(`${apiBase}/submit`, {
         method: "POST",
@@ -615,8 +597,9 @@ function viewStep5() {
         el("p", { className: "ok" }, "We’ve received your details and will be in touch.")
       );
     } catch (e) {
-      $("#btn-submit").disabled = false;
+      btn.disabled = false;
       alert("Submit failed — please try again.");
     }
   };
 }
+
