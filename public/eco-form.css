@@ -116,3 +116,7 @@ button:hover {
   margin-bottom: 4px;
 }
 
+.required-asterisk {
+  color: #d4351c; /* GOV.UK red */
+  margin-left: 4px;
+}
