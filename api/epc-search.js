@@ -1,5 +1,5 @@
 // /api/epc-search.js
-// POST { postcode, uprn? } -> { found, band?, lmkKey?, certificateDate?, region }
+// POST { postcode, uprn? } -> { found, band?, score?, lmkKey?, certificateDate?, region }
 
 const UK_POSTCODE = /^[A-Z]{1,2}\d[A-Z\d]?\s?\d[A-Z]{2}$/i;
 const SCOT_PREFIXES = ["AB","DD","DG","EH","FK","G","HS","IV","KA","KW","KY","ML","PA","PH","TD","ZE"];
@@ -80,9 +80,11 @@ async function lookupEpcEW({ postcode, uprn }) {
       );
       const rec = rowsU[0];
       const band = getField(rec, "current_energy_rating", "current-energy-rating");
+      const score = getField(rec, "current_energy_efficiency", "current-energy-efficiency"); // numeric
       return {
         found: !!band,
         band,
+        score: typeof score === "number" ? score : (score ? Number(score) : null),
         lmkKey: getField(rec, "lmk_key", "lmk-key"),
         certificateDate: toISODate(getField(rec, "lodgement_date", "lodgement-date")),
         region: "ENGLAND_WALES",
@@ -103,10 +105,12 @@ async function lookupEpcEW({ postcode, uprn }) {
   );
   const rec = rowsP[0];
   const band = getField(rec, "current_energy_rating", "current-energy-rating");
+  const score = getField(rec, "current_energy_efficiency", "current-energy-efficiency");
 
   return {
     found: !!band,
     band,
+    score: typeof score === "number" ? score : (score ? Number(score) : null),
     lmkKey: getField(rec, "lmk_key", "lmk-key"),
     certificateDate: toISODate(getField(rec, "lodgement_date", "lodgement-date")),
     region: "ENGLAND_WALES",
