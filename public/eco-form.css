@@ -77,3 +77,10 @@ button:hover {
 .hint-list li {
   margin: 0.25rem 0;
 }
+
+.warn {
+  color: #d4351c; /* GOV.UK red */
+  font-weight: bold;
+  margin: 0.5rem 0 0.75rem;
+}
+.hidden { display: none !important; }
