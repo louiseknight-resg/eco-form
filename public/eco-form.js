@@ -160,49 +160,65 @@
     }
 
     // ---------------- Step 2: EPC check & eligibility by EPC ----------------
-    function viewStep2() {
-      state.step = 2; setProgress();
-      stepWrap.innerHTML = '';
-      stepWrap.append(
-        el('h2', {}, 'Energy Performance Certificate'),
-        el('p', {className:'helper'}, 'We’re checking your EPC…'),
-        el('div', {className:'epc', id:'epc-box'}, 'Checking…')
-      );
+   // ---------------- Step 2: EPC check & show results ----------------
+function viewStep2() {
+  state.step = 2; setProgress();
+  stepWrap.innerHTML = '';
 
-      (async () => {
-        try {
-          const out = await j(`${apiBase}/epc-search`, {
-            method:'POST',
-            headers:{'Content-Type':'application/json'},
-            body: JSON.stringify({ postcode: state.postcode, uprn: state.uprn })
-          });
-          state.epc = out || { found:false };
-          const box = $('#epc-box');
-          box.innerHTML = '';
-          if (out.found) {
-            const band = out.band || 'N/A';
-            const score = typeof out.score === 'number' ? out.score : null;
-            box.append(
-              el('p', {}, 'We found your certificate:'),
-              el('p', {}, 'EPC band: ', el('strong', {}, band)),
-              score != null ? el('p', {className:'note'}, `EPC score: ${score}`) : ''
-            );
-            // Disqualify rule: anything above D60 (i.e., numeric score > 60)
-            if (score != null && score > 60) {
-              return showDisqualify(`Your EPC score is ${score}, which is above the qualifying threshold (D60).`);
-            }
-          } else {
-            // no EPC still qualifies to continue
-            box.append(el('p', {className:'warn'}, 'No EPC found – you may still qualify.'));
-          }
-          // If E/F/G or no EPC → continue; If A–D with score <= 60 → continue
-          viewStep3();
-        } catch(e) {
-          $('#epc-box').innerHTML = 'Lookup failed. We can still proceed.';
-          viewStep3();
+  stepWrap.append(
+    el('h2', {}, 'Energy Performance Certificate'),
+    el('p', {className:'helper'}, 'We’re checking your EPC…'),
+    el('div', {className:'epc', id:'epc-box'}, 'Checking…')
+  );
+
+  (async () => {
+    try {
+      const out = await j(`${apiBase}/epc-search`, {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ postcode: state.postcode, uprn: state.uprn })
+      });
+      state.epc = out || { found:false };
+      const box = $('#epc-box');
+      box.innerHTML = '';
+
+      if (out.found) {
+        const band = out.band || 'N/A';
+        const score = typeof out.score === 'number' ? out.score : null;
+        box.append(
+          el('p', {}, 'We found your certificate:'),
+          el('p', {}, 'EPC band: ', el('strong', {}, band)),
+          score != null ? el('p', {className:'note'}, `EPC score: ${score}`) : ''
+        );
+
+        // if EPC > 60 → disqualify immediately
+        if (score != null && score > 60) {
+          return showDisqualify(
+            `Your EPC score is ${score}, which is above the qualifying threshold (D60).`
+          );
         }
-      })();
+
+      } else {
+        // No EPC
+        box.append(
+          el('p', {className:'warn'}, 'No EPC found. You may still qualify.'),
+          el('p', {className:'note'}, 'We’ll ask a few questions to check eligibility.')
+        );
+      }
+
+      // ✅ Only show this after EPC info is displayed
+      const cont = el('button', {id:'epc-continue'}, 'Continue');
+      stepWrap.append(cont);
+      cont.onclick = () => viewStep3();
+
+    } catch (e) {
+      $('#epc-box').innerHTML = 'Lookup failed. We can still proceed.';
+      const cont = el('button', {id:'epc-continue'}, 'Continue');
+      stepWrap.append(cont);
+      cont.onclick = () => viewStep3();
     }
+  })();
+}
 
     // ---------------- Step 3: Routes (Benefits → Medical → Income with early-exit) ----------------
     function viewStep3() {
