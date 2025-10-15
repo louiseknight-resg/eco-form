@@ -602,4 +602,14 @@ function viewStep5() {
     }
   };
 }
+  // Start
+  viewStep1();
+} // end mount
+
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", mount);
+} else {
+  mount();
+}
+})(); // end IIFE
 
