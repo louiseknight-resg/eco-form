@@ -316,29 +316,43 @@ function viewStep3b() {
   setProgress();
   stepWrap.innerHTML = "";
 
-  stepWrap.append(
-    el("h2", {}, "Eligibility – Medical"),
-    el("p", { className: "helper" }, "Does someone in the household have any of these conditions?"),
-    // 👇 Add a clear list of medical categories here
-    el("ul", { className: "hint-list" },
-      el("li", {}, "Respiratory (e.g. asthma, COPD)"),
-      el("li", {}, "Cardiovascular (e.g. heart disease)"),
-      el("li", {}, "Limited mobility"),
-      el("li", {}, "Immunosuppressed (e.g. cancer treatment, autoimmune therapy)")
+stepWrap.append(
+  el("h2", {}, "Eligibility – Medical"),
+  el(
+    "p",
+    { className: "helper" },
+    "Does someone in the household have any of these conditions?"
+  ),
+  // 👇 List the qualifying medical categories
+  el(
+    "ul",
+    { className: "hint-list" },
+    el("li", {}, "Respiratory (e.g. asthma, COPD)"),
+    el("li", {}, "Cardiovascular (e.g. heart disease)"),
+    el("li", {}, "Limited mobility"),
+    el("li", {}, "Immunosuppressed (e.g. cancer treatment, autoimmune therapy)")
+  ),
+  // 👇 Radio buttons stacked vertically
+  el(
+    "div",
+    { className: "radio-block" },
+    el(
+      "label",
+      {},
+      el("input", { type: "radio", name: "med", value: "yes" }),
+      " Yes"
     ),
-    el("div", {},
-      el("label", {},
-        el("input", { type: "radio", name: "med", value: "yes" }),
-        " Yes"
-      ),
-      el("label", { style: "margin-left:12px;" },
-        el("input", { type: "radio", name: "med", value: "no" }),
-        " No"
-      )
-    ),
-    el("button", { id: "medical-next", className: "govuk-button" }, "Continue"),
-    backButton(viewStep3)
-  );
+    el(
+      "label",
+      {},
+      el("input", { type: "radio", name: "med", value: "no" }),
+      " No"
+    )
+  ),
+  el("button", { id: "medical-next", className: "govuk-button" }, "Continue"),
+  backButton(viewStep3)
+);
+
 
   $("#medical-next").onclick = () => {
     const sel = document.querySelector('input[name="med"]:checked');
