@@ -101,88 +101,121 @@
       }
     }
 
-    // Step 1: Address lookup (with manual fallback)
-    function viewStep1() {
-      state.step = 1;
-      setProgress();
-      stepWrap.innerHTML = "";
-      stepWrap.append(
-        el("h2", {}, "Check your property"),
-        el("p", { className: "helper" }, "Enter your postcode and choose your address."),
-        el("label", {}, "Postcode"),
-        el("input", { type: "text", id: "eco-postcode", placeholder: "e.g. CA1 2AB", value: state.postcode }),
-        el("button", { id: "btn-find", className: "govuk-button" }, "Find address"),
-        el(
-          "div",
-          { id: "addr-block", className: "hidden" },
-          el("label", {}, "Select your address"),
-          el("select", { id: "eco-addr" }),
-          el("div", { style: "margin-top:8px;" }, el("button", { id: "btn-continue", className: "govuk-button" }, "Continue")),
-          el("p", { className: "note" }, "Can’t find it? ", el("a", { href: "#", id: "enter-manually" }, "Enter manually"))
-        ),
-        el(
-          "div",
-          { id: "manual-block", className: "hidden" },
-          el('p', {id:'manual-msg', className:'warn hidden'}, 'We couldn’t find your address — please enter it manually.'),
-          el("label", {}, "Address line 1"),
-          el("input", { type: "text", id: "manual-line" }),
-          el("label", {}, "Postcode"),
-          el("input", { type: "text", id: "manual-post", value: state.postcode }),
-          el("button", { id: "btn-manual-continue", className: "govuk-button" }, "Continue")
-        )
-      );
+// Step 1: Address lookup (with manual fallback + message)
+function viewStep1() {
+  state.step = 1;
+  setProgress();
+  stepWrap.innerHTML = "";
 
-      $("#btn-find").onclick = async () => {
-        const raw = $("#eco-postcode").value.trim();
-        if (!raw) return alert("Please enter a postcode");
-        state.postcode = raw;
-        $("#btn-find").disabled = true;
-        try {
-          const data = await j(`${apiBase}/address-lookup?postcode=${encodeURIComponent(raw)}`);
-          state.addresses = data.options || [];
-          const hasOptions = state.addresses.length > 0;
-          $("#addr-block").classList.toggle("hidden", !hasOptions);
-          $("#manual-block").classList.toggle("hidden", hasOptions);
-          if (hasOptions) {
-            const sel = $("#eco-addr");
-            sel.innerHTML = "";
-            state.addresses.forEach(o => sel.appendChild(el("option", { value: o.id }, o.label)));
-          } else {
-            $("#manual-post").value = state.postcode;
-          }
-        } catch (e) {
-          $("#addr-block").classList.add("hidden");
-          $("#manual-block").classList.remove("hidden");
-        } finally {
-          $("#btn-find").disabled = false;
-        }
-      };
+  stepWrap.append(
+    el("h2", {}, "Check your property"),
+    el("p", { className: "helper" }, "Enter your postcode and choose your address."),
+    el("label", {}, "Postcode"),
+    el("input", { type: "text", id: "eco-postcode", placeholder: "e.g. CA1 2AB", value: state.postcode }),
+    el("button", { id: "btn-find", className: "govuk-button" }, "Find address"),
+    el(
+      "div",
+      { id: "addr-block", className: "hidden" },
+      el("label", {}, "Select your address"),
+      el("select", { id: "eco-addr" }),
+      el("div", { style: "margin-top:8px;" },
+        el("button", { id: "btn-continue", className: "govuk-button" }, "Continue")
+      ),
+      el("p", { className: "note" }, "Can’t find it? ",
+        el("a", { href: "#", id: "enter-manually" }, "Enter manually")
+      )
+    ),
+    el(
+      "div",
+      { id: "manual-block", className: "hidden" },
+      // 👇 this message is shown only when lookup fails/returns no results
+      el("p", { id: "manual-msg", className: "warn hidden" }, "We couldn’t find your address — please enter it manually."),
+      el("label", {}, "Address line 1"),
+      el("input", { type: "text", id: "manual-line" }),
+      el("label", {}, "Postcode"),
+      el("input", { type: "text", id: "manual-post", value: state.postcode }),
+      el("button", { id: "btn-manual-continue", className: "govuk-button" }, "Continue")
+    )
+  );
 
-      $("#btn-continue").onclick = () => {
-        const sel = $("#eco-addr");
-        const picked = state.addresses.find(o => o.id === sel.value);
-        if (!picked) return alert("Please select your address");
-        state.addressLabel = picked.label;
-        state.uprn = picked.uprn || "";
-        viewStep2();
-      };
+  const hideManualMsg = () => {
+    const m = document.getElementById("manual-msg");
+    if (m) m.classList.add("hidden");
+  };
+  const showManualMsg = () => {
+    const m = document.getElementById("manual-msg");
+    if (m) m.classList.remove("hidden");
+  };
 
-      $("#enter-manually").onclick = e => {
-        e.preventDefault();
-        $("#addr-block").classList.add("hidden");
-        $("#manual-block").classList.remove("hidden");
-      };
+  document.getElementById("btn-find").onclick = async () => {
+    const raw = document.getElementById("eco-postcode").value.trim();
+    if (!raw) return alert("Please enter a postcode");
+    state.postcode = raw;
 
-      $("#btn-manual-continue").onclick = () => {
-        const line = $("#manual-line").value.trim();
-        const post = $("#manual-post").value.trim();
-        if (!line || !post) return alert("Please enter address and postcode");
-        state.addressLabel = `${line}, ${post}`;
-        state.uprn = "";
-        state.postcode = post;
-        viewStep2();
-      };
+    // reset UI state before lookup
+    hideManualMsg();
+    document.getElementById("btn-find").disabled = true;
+
+    try {
+      const data = await j(`${apiBase}/address-lookup?postcode=${encodeURIComponent(raw)}`);
+      state.addresses = data.options || [];
+      const hasOptions = state.addresses.length > 0;
+
+      // toggle blocks
+      document.getElementById("addr-block").classList.toggle("hidden", !hasOptions);
+      document.getElementById("manual-block").classList.toggle("hidden", hasOptions);
+
+      if (hasOptions) {
+        // fill dropdown + ensure the warning is hidden
+        const sel = document.getElementById("eco-addr");
+        sel.innerHTML = "";
+        state.addresses.forEach(o => sel.appendChild(el("option", { value: o.id }, o.label)));
+        hideManualMsg();
+      } else {
+        // show manual + warning message
+        document.getElementById("manual-post").value = state.postcode;
+        showManualMsg();
+      }
+    } catch (e) {
+      // API error → go manual + show warning
+      document.getElementById("addr-block").classList.add("hidden");
+      document.getElementById("manual-block").classList.remove("hidden");
+      document.getElementById("manual-post").value = state.postcode;
+      showManualMsg();
+    } finally {
+      document.getElementById("btn-find").disabled = false;
     }
+  };
+
+  document.getElementById("btn-continue").onclick = () => {
+    const sel = document.getElementById("eco-addr");
+    const picked = state.addresses.find(o => o.id === sel.value);
+    if (!picked) return alert("Please select your address");
+    state.addressLabel = picked.label;
+    state.uprn = picked.uprn || "";
+    viewStep2();
+  };
+
+  document.getElementById("enter-manually").onclick = e => {
+    e.preventDefault();
+    // User chose manual on purpose → keep message hidden
+    hideManualMsg();
+    document.getElementById("addr-block").classList.add("hidden");
+    document.getElementById("manual-block").classList.remove("hidden");
+    document.getElementById("manual-post").value = state.postcode || document.getElementById("eco-postcode").value.trim();
+  };
+
+  document.getElementById("btn-manual-continue").onclick = () => {
+    const line = document.getElementById("manual-line").value.trim();
+    const post = document.getElementById("manual-post").value.trim();
+    if (!line || !post) return alert("Please enter address and postcode");
+    state.addressLabel = `${line}, ${post}`;
+    state.uprn = "";
+    state.postcode = post;
+    viewStep2();
+  };
+}
+
 
 // Step 2: EPC check & show results (band-only display)
 function viewStep2() {
