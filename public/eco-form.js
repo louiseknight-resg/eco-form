@@ -491,86 +491,132 @@ function viewStep4() {
   };
 }
 
-    // Step 5: Contact
-    function viewStep5() {
-      state.step = 5;
-      setProgress();
+// Step 5: Contact
+function viewStep5() {
+  state.step = 5;
+  setProgress();
+  stepWrap.innerHTML = "";
+
+  const band = state.epc?.band || "N/A";
+  const req = () => el("span", { className: "required-asterisk" }, " *");
+
+  stepWrap.append(
+    el("h2", {}, "Contact Details"),
+    el(
+      "p",
+      { className: "helper" },
+      "Please provide your details so we can confirm your eligibility."
+    ),
+    el("div", { className: "epc" }, `EPC: Band ${band}`),
+
+    // homeowner
+    el("label", {}, "Are you the homeowner?", req()),
+    el(
+      "select",
+      { id: "q-homeowner" },
+      el("option", { value: "" }, "Please choose"),
+      el("option", { value: "yes" }, "Yes"),
+      el("option", { value: "no" }, "No")
+    ),
+
+    // name row
+    el(
+      "div",
+      { className: "row" },
+      el(
+        "div",
+        {},
+        el("label", {}, "First name", req()),
+        el("input", { type: "text", id: "q-first" })
+      ),
+      el(
+        "div",
+        {},
+        el("label", {}, "Last name", req()),
+        el("input", { type: "text", id: "q-last" })
+      )
+    ),
+
+    // phone + email row
+    el(
+      "div",
+      { className: "row" },
+      el(
+        "div",
+        {},
+        el("label", {}, "Mobile", req()),
+        el("input", { type: "tel", id: "q-phone", placeholder: "07…" })
+      ),
+      el(
+        "div",
+        {},
+        el("label", {}, "Email", req()),
+        el("input", { type: "email", id: "q-email", placeholder: "you@domain.com" })
+      )
+    ),
+
+    // consent
+    el(
+      "label",
+      {},
+      el("input", { type: "checkbox", id: "q-consent" }),
+      req(),
+      " I agree to be contacted about eligibility."
+    ),
+
+    el("button", { id: "btn-submit", className: "govuk-button" }, "Submit"),
+    backButton(viewStep4)
+  );
+
+  $("#btn-submit").onclick = async () => {
+    const homeowner = $("#q-homeowner").value;
+    const firstName = $("#q-first").value.trim();
+    const lastName  = $("#q-last").value.trim();
+    const phone     = $("#q-phone").value.trim();
+    const email     = $("#q-email").value.trim();
+    const consent   = $("#q-consent").checked;
+
+    // Required field checks
+    if (!homeowner) return alert("Please select whether you are the homeowner.");
+    if (!firstName) return alert("Please enter your first name.");
+    if (!lastName) return alert("Please enter your last name.");
+    if (!phone) return alert("Please enter your mobile number.");
+    if (!email) return alert("Please enter your email address.");
+    if (!consent) return alert("Please tick the consent box to continue.");
+
+    const payload = {
+      status: "qualified",
+      postcode: state.postcode,
+      addressLabel: state.addressLabel,
+      uprn: state.uprn || null,
+      epc_found: !!state.epc?.found,
+      epc_band: state.epc?.band || null,
+      epc_score: state.epc?.score || null,
+      eligibilityRoute: state.eligibilityRoute,
+      property: state.property,
+      homeowner,
+      firstName,
+      lastName,
+      phone,
+      email,
+      consent
+    };
+
+    $("#btn-submit").disabled = true;
+    try {
+      await j(`${apiBase}/submit`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
       stepWrap.innerHTML = "";
-      const band = state.epc?.band || "N/A";
       stepWrap.append(
-        el("h2", {}, "Contact Details"),
-        el("p", { className: "helper" }, "Please provide your details so we can confirm your eligibility."),
-        el("div", { className: "epc" }, `EPC: Band ${band}`),
-        el("label", {}, "Are you the homeowner?"),
-        el(
-          "select",
-          { id: "q-homeowner" },
-          el("option", { value: "" }, "Please choose"),
-          el("option", { value: "yes" }, "Yes"),
-          el("option", { value: "no" }, "No")
-        ),
-        el(
-          "div",
-          { className: "row" },
-          el("div", {}, el("label", {}, "First name*"), el("input", { type: "text", id: "q-first" })),
-          el("div", {}, el("label", {}, "Last name*"), el("input", { type: "text", id: "q-last" }))
-        ),
-        el(
-          "div",
-          { className: "row" },
-          el("div", {}, el("label", {}, "Mobile*"), el("input", { type: "tel", id: "q-phone", placeholder: "07…" })),
-          el("div", {}, el("label", {}, "Email*"), el("input", { type: "email", id: "q-email", placeholder: "you@domain.com" }))
-        ),
-        el("label", {}, el("input", { type: "checkbox", id: "q-consent" }), " I agree to be contacted about eligibility."),
-        el("button", { id: "btn-submit", className: "govuk-button" }, "Submit"),
-        backButton(viewStep4)
+        el("h2", {}, "Thanks!"),
+        el("p", { className: "ok" }, "We’ve received your details and will be in touch.")
       );
-
-      $("#btn-submit").onclick = async () => {
-        const payload = {
-          status: "qualified",
-          postcode: state.postcode,
-          addressLabel: state.addressLabel,
-          uprn: state.uprn || null,
-          epc_found: !!state.epc?.found,
-          epc_band: state.epc?.band || null,
-          epc_score: state.epc?.score || null,
-          eligibilityRoute: state.eligibilityRoute,
-          property: state.property,
-          homeowner: $("#q-homeowner").value,
-          firstName: $("#q-first").value.trim(),
-          lastName: $("#q-last").value.trim(),
-          phone: $("#q-phone").value.trim(),
-          email: $("#q-email").value.trim(),
-          consent: $("#q-consent").checked
-        };
-        if (!payload.firstName || !payload.lastName) return alert("Please enter your name.");
-        if (!payload.phone || !payload.email) return alert("Please enter mobile and email.");
-        if (!payload.consent) return alert("Please tick consent.");
-
-        $("#btn-submit").disabled = true;
-        try {
-          await j(`${apiBase}/submit`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(payload)
-          });
-          stepWrap.innerHTML = "";
-          stepWrap.append(el("h2", {}, "Thanks!"), el("p", { className: "ok" }, "We’ve received your details and will be in touch."));
-        } catch (e) {
-          $("#btn-submit").disabled = false;
-          alert("Submit failed — please try again.");
-        }
-      };
+    } catch (e) {
+      $("#btn-submit").disabled = false;
+      alert("Submit failed — please try again.");
     }
-
-    // Start
-    viewStep1();
-  }
-
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", mount);
-  } else {
-    mount();
-  }
-})();
+  };
+}
