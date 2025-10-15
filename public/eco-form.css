@@ -68,3 +68,12 @@ button:hover {
 .hidden {
   display: none !important;
 }
+
+.hint-list {
+  margin: 0.5rem 0 1rem 1.25rem;
+  color: #505a5f; /* GOV.UK hint text colour */
+  font-size: 0.95rem;
+}
+.hint-list li {
+  margin: 0.25rem 0;
+}
