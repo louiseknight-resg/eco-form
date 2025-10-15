@@ -29,6 +29,13 @@ label {
   margin: 0.75rem 0 0.25rem;
 }
 
+/* Red asterisk for any label marked data-required="true" */
+label[data-required="true"]::after {
+  content: " *";
+  color: #d4351c; /* GOV.UK red */
+  margin-left: 4px;
+}
+
 .radio-block label {
   display: flex;
   align-items: center;
