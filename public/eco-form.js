@@ -183,55 +183,63 @@
       };
     }
 
-    // Step 2: EPC check & show results (band-only display)
-    function viewStep2() {
-      state.step = 2;
-      setProgress();
-      stepWrap.innerHTML = "";
+// Step 2: EPC check & show results (band-only display)
+function viewStep2() {
+  state.step = 2;
+  setProgress();
+  stepWrap.innerHTML = "";
 
-      stepWrap.append(
-        el("h2", {}, "Energy Performance Certificate"),
-        el("p", { className: "helper" }, "We’re checking your EPC…"),
-        el("div", { className: "epc", id: "epc-box" }, "Checking...")
-      );
+  stepWrap.append(
+    el("h2", {}, "Energy Performance Certificate"),
+    el("p", { className: "helper" }, "We’re checking your EPC…"),
+    el("div", { className: "epc", id: "epc-box" }, "Checking...")
+  );
 
-      (async () => {
-        try {
-          const out = await j(`${apiBase}/epc-search`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ postcode: state.postcode, uprn: state.uprn })
-          });
-          state.epc = out || { found: false };
-          const box = $("#epc-box");
-          box.innerHTML = "";
+  (async () => {
+    try {
+      const out = await j(`${apiBase}/epc-search`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          postcode: state.postcode,
+          uprn: state.uprn,
+          addressLabel: state.addressLabel   // <-- added
+        })
+      });
+      state.epc = out || { found: false };
+      const box = $("#epc-box");
+      box.innerHTML = "";
 
-          if (out.found) {
-            const band = out.band || "N/A";
-            const score = typeof out.score === "number" ? out.score : null;
-            box.append(el("p", {}, "We found your certificate:"), el("p", {}, "EPC rating: ", el("strong", {}, band)));
-            if (score != null && score > 60) {
-              return showDisqualify(`Your EPC score is ${score}, which is above the qualifying threshold (D60).`);
-            }
-          } else {
-            box.append(
-              el("p", { className: "warn" }, "No EPC found. You may still qualify."),
-              el("p", { className: "note" }, "We’ll ask a few questions to check eligibility.")
-            );
-          }
-
-          const cont = el("button", { id: "epc-continue", className: "govuk-button" }, "Continue");
-          const back = backButton(viewStep1);
-          stepWrap.append(cont, back);
-          cont.onclick = () => viewStep3();
-        } catch (e) {
-          $("#epc-box").innerHTML = "Lookup failed. We can still proceed.";
-          const cont = el("button", { id: "epc-continue", className: "govuk-button" }, "Continue");
-          stepWrap.append(cont, backButton(viewStep1));
-          cont.onclick = () => viewStep3();
+      if (out.found) {
+        const band = out.band || "N/A";
+        const score = typeof out.score === "number" ? out.score : null;
+        box.append(
+          el("p", {}, "We found your certificate:"),
+          el("p", {}, "EPC rating: ", el("strong", {}, band))
+        );
+        if (score != null && score > 60) {
+          return showDisqualify(`Your EPC score is ${score}, which is above the qualifying threshold (D60).`);
         }
-      })();
+      } else {
+        box.append(
+          el("p", { className: "warn" }, "No EPC found. You may still qualify."),
+          el("p", { className: "note" }, "We’ll ask a few questions to check eligibility.")
+        );
+      }
+
+      const cont = el("button", { id: "epc-continue", className: "govuk-button" }, "Continue");
+      const back = backButton(viewStep1);
+      stepWrap.append(cont, back);
+      cont.onclick = () => viewStep3();
+    } catch (e) {
+      $("#epc-box").innerHTML = "Lookup failed. We can still proceed.";
+      const cont = el("button", { id: "epc-continue", className: "govuk-button" }, "Continue");
+      stepWrap.append(cont, backButton(viewStep1));
+      cont.onclick = () => viewStep3();
     }
+  })();
+}
+
 
     // Step 3a: Benefits (early-exit)
     function viewStep3() {
