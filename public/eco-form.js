@@ -487,10 +487,63 @@ function viewStep4() {
       return showDisqualify("Properties with existing solar panels are not eligible under this scheme.");
     }
 
-    viewStep5();
+    viewStep4b();
   };
 }
 
+// Step 4b: Measures selection
+function viewStep4b() {
+  state.step = 4;
+  setProgress();
+  stepWrap.innerHTML = "";
+
+  stepWrap.append(
+    el("h2", {}, "Measures of Interest"),
+    el("p", { className: "helper" },
+      "This scheme allows you to choose solar PV, air source and wall insulation OR solar PV and air source alone."
+    ),
+    el("p", { className: "helper" }, "Which measures are you interested in?"),
+    el(
+      "div",
+      { className: "radio-block" },
+      el("label", {},
+        el("input", { type: "radio", name: "measures", value: "air_solar" }),
+        " Air source heating and solar panels"
+      ),
+      el("label", {},
+        el("input", { type: "radio", name: "measures", value: "air_solar_wall" }),
+        " Air source heating, solar panels and wall insulation"
+      ),
+      el("label", {},
+        el("input", { type: "radio", name: "measures", value: "boiler" }),
+        " Mains gas boiler upgrade"
+      ),
+      el("label", { style: "font-weight:700;" },
+        el("input", { type: "radio", name: "measures", value: "none" }),
+        " None of the above"
+      )
+    ),
+    el("button", { id: "measures-next", className: "govuk-button" }, "Continue"),
+    backButton(viewStep4)
+  );
+
+  document.getElementById("measures-next").onclick = () => {
+    const sel = document.querySelector('input[name="measures"]:checked');
+    if (!sel) return alert("Please select one option");
+
+    state.measures = sel.value;
+
+    if (sel.value === "none") {
+      return showDisqualify(
+        "At this time, we can only help with Government approved measures. We may reach out if additional measures which may suit your home become available.",
+        true // allows opt-in
+      );
+    }
+
+    viewStep5();
+  };
+}
+    
 // Step 5: Contact
 function viewStep5() {
   state.step = 5;
