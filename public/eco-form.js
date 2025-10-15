@@ -268,28 +268,47 @@
       };
     }
 
-    // Step 3b: Medical (early-exit)
-    function viewStep3b() {
-      state.step = 3;
-      setProgress();
-      stepWrap.innerHTML = "";
-      stepWrap.append(
-        el("h2", {}, "Eligibility – Medical"),
-        el("p", { className: "helper" }, "Does someone in the household have any of these conditions?"),
-        el("div", {}, el("label", {}, el("input", { type: "radio", name: "med", value: "yes" }), " Yes"), el("label", { style: "margin-left:12px;" }, el("input", { type: "radio", name: "med", value: "no" }), " No")),
-        el("button", { id: "medical-next", className: "govuk-button" }, "Continue"),
-        backButton(viewStep3)
-      );
-      $("#medical-next").onclick = () => {
-        const sel = document.querySelector('input[name="med"]:checked');
-        if (!sel) return alert("Please choose Yes or No");
-        if (sel.value === "yes") {
-          state.eligibilityRoute = "medical";
-          return viewStep4();
-        }
-        viewStep3c();
-      };
+// Step 3b: Medical (early-exit)
+function viewStep3b() {
+  state.step = 3;
+  setProgress();
+  stepWrap.innerHTML = "";
+
+  stepWrap.append(
+    el("h2", {}, "Eligibility – Medical"),
+    el("p", { className: "helper" }, "Does someone in the household have any of these conditions?"),
+    // 👇 Add a clear list of medical categories here
+    el("ul", { className: "hint-list" },
+      el("li", {}, "Respiratory (e.g. asthma, COPD)"),
+      el("li", {}, "Cardiovascular (e.g. heart disease)"),
+      el("li", {}, "Limited mobility"),
+      el("li", {}, "Immunosuppressed (e.g. cancer treatment, autoimmune therapy)")
+    ),
+    el("div", {},
+      el("label", {},
+        el("input", { type: "radio", name: "med", value: "yes" }),
+        " Yes"
+      ),
+      el("label", { style: "margin-left:12px;" },
+        el("input", { type: "radio", name: "med", value: "no" }),
+        " No"
+      )
+    ),
+    el("button", { id: "medical-next", className: "govuk-button" }, "Continue"),
+    backButton(viewStep3)
+  );
+
+  $("#medical-next").onclick = () => {
+    const sel = document.querySelector('input[name="med"]:checked');
+    if (!sel) return alert("Please choose Yes or No");
+    if (sel.value === "yes") {
+      state.eligibilityRoute = "medical";
+      return viewStep4();
     }
+    viewStep3c();
+  };
+}
+
 
     // Step 3c: Income
     function viewStep3c() {
