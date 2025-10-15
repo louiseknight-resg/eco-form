@@ -123,6 +123,7 @@
         el(
           "div",
           { id: "manual-block", className: "hidden" },
+          el('p', {id:'manual-msg', className:'warn hidden'}, 'We couldn’t find your address — please enter it manually.'),
           el("label", {}, "Address line 1"),
           el("input", { type: "text", id: "manual-line" }),
           el("label", {}, "Postcode"),
