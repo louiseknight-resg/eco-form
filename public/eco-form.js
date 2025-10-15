@@ -413,61 +413,83 @@ function viewStep3c() {
 }
 
 
-    // Step 4: Property
-    function viewStep4() {
-      state.step = 4;
-      setProgress();
-      stepWrap.innerHTML = "";
-      stepWrap.append(
-        el("h2", {}, "Your Property"),
-        el("label", {}, "Main heating"),
-        el(
-          "select",
-          { id: "p-heat" },
-          ...["", "oil", "LPG", "wood-coal", "electric", "heat pump", "other"].map(v => el("option", { value: v }, v || "Choose…"))
-        ),
-        el("label", {}, "Wall type"),
-        el(
-          "select",
-          { id: "p-walls" },
-          ...["", "cavity", "solid", "both"].map(v => el("option", { value: v }, v || "Choose…"))
-        ),
-        el("label", {}, "Do you have solar panels?"),
-        el(
-          "select",
-          { id: "p-solar" },
-          el("option", { value: "" }, "Choose…"),
-          el("option", { value: "no" }, "No"),
-          el("option", { value: "yes" }, "Yes")
-        ),
-        el("label", {}, "Is the property listed?"),
-        el(
-          "select",
-          { id: "p-listed" },
-          el("option", { value: "not_sure" }, "Not sure"),
-          el("option", { value: "no" }, "No"),
-          el("option", { value: "yes" }, "Yes")
-        ),
-        el("label", {}, "Main reason for reaching out"),
-        el("textarea", { id: "p-reason", rows: 3 }),
-        el("button", { id: "p-next", className: "govuk-button" }, "Continue"),
-        backButton(viewStep3)
-      );
+// Step 4: Property (all fields required)
+function viewStep4() {
+  state.step = 4;
+  setProgress();
+  stepWrap.innerHTML = "";
 
-      $("#p-next").onclick = () => {
-        state.property = {
-          heating: $("#p-heat").value,
-          walls: $("#p-walls").value,
-          solar: $("#p-solar").value || "no",
-          listed: $("#p-listed").value || "not_sure",
-          reason: $("#p-reason").value.trim()
-        };
-        if (state.property.solar === "yes") {
-          return showDisqualify("Properties with existing solar panels are not eligible under this scheme.");
-        }
-        viewStep5();
-      };
+  const req = (text) => el("span", { className: "required-asterisk" }, " *");
+
+  stepWrap.append(
+    el("h2", {}, "Your Property"),
+
+    el("label", {}, "Main heating", req()),
+    el(
+      "select",
+      { id: "p-heat" },
+      ...["", "oil", "LPG", "wood-coal", "electric", "heat pump", "other"].map(v =>
+        el("option", { value: v }, v || "Choose…")
+      )
+    ),
+
+    el("label", {}, "Wall type", req()),
+    el(
+      "select",
+      { id: "p-walls" },
+      ...["", "cavity", "solid", "both"].map(v =>
+        el("option", { value: v }, v || "Choose…")
+      )
+    ),
+
+    el("label", {}, "Do you have solar panels?", req()),
+    el(
+      "select",
+      { id: "p-solar" },
+      el("option", { value: "" }, "Choose…"),
+      el("option", { value: "no" }, "No"),
+      el("option", { value: "yes" }, "Yes")
+    ),
+
+    el("label", {}, "Is the property listed?", req()),
+    el(
+      "select",
+      { id: "p-listed" },
+      el("option", { value: "" }, "Choose…"),
+      el("option", { value: "no" }, "No"),
+      el("option", { value: "yes" }, "Yes"),
+      el("option", { value: "not_sure" }, "Not sure")
+    ),
+
+    el("label", {}, "Main reason for reaching out", req()),
+    el("textarea", { id: "p-reason", rows: 3 }),
+
+    el("button", { id: "p-next", className: "govuk-button" }, "Continue"),
+    backButton(viewStep3)
+  );
+
+  document.getElementById("p-next").onclick = () => {
+    const heating = document.getElementById("p-heat").value;
+    const walls   = document.getElementById("p-walls").value;
+    const solar   = document.getElementById("p-solar").value;
+    const listed  = document.getElementById("p-listed").value;
+    const reason  = document.getElementById("p-reason").value.trim();
+
+    if (!heating) return alert("Please choose your main heating.");
+    if (!walls)   return alert("Please choose your wall type.");
+    if (!solar)   return alert("Please tell us if you have solar panels.");
+    if (!listed)  return alert("Please tell us if the property is listed.");
+    if (!reason)  return alert("Please tell us your main reason for reaching out.");
+
+    state.property = { heating, walls, solar, listed, reason };
+
+    if (solar === "yes") {
+      return showDisqualify("Properties with existing solar panels are not eligible under this scheme.");
     }
+
+    viewStep5();
+  };
+}
 
     // Step 5: Contact
     function viewStep5() {
