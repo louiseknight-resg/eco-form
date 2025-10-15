@@ -84,3 +84,24 @@ button:hover {
   margin: 0.5rem 0 0.75rem;
 }
 .hidden { display: none !important; }
+
+.radio-block label {
+  display: flex;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.radio-block input[type="radio"] {
+  margin-right: 8px;
+  margin-top: 0;
+}
+
+.hint-list {
+  margin: 8px 0 16px;
+  padding-left: 20px;
+}
+
+.hint-list li {
+  margin-bottom: 4px;
+}
+
