@@ -129,12 +129,21 @@ button:hover {
 }
 
 .commitment-box {
-  border: 2px solid #1d70b8; /* GOV.UK blue */
+  border: 2px solid #1d70b8;
   padding: 15px;
   border-radius: 5px;
   background: #f3f2f1;
   margin-top: 1rem;
 }
-.commitment-box p { margin-bottom: 0.75rem; }
-.commitment-box .note { font-size: 0.95rem; color: #505a5f; }
-
+.commitment-box label {
+  font-weight: 600;
+  display: block;
+  margin-bottom: 10px;
+}
+.commitment-box p {
+  margin-bottom: 0.75rem;
+}
+.commitment-box .note {
+  font-size: 0.95rem;
+  color: #505a5f;
+}
