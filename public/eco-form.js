@@ -598,7 +598,7 @@ function viewStep5() {
     ),
 
     el("button", { id: "btn-submit", className: "govuk-button" }, "Submit"),
-    backButton(viewStep4)
+    backButton(viewStep4b)
   );
 
   // submit handler with mandatory checks
