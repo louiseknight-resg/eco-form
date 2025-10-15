@@ -516,7 +516,7 @@ function viewStep4b() {
       ),
       el("label", {},
         el("input", { type: "radio", name: "measures", value: "boiler" }),
-        " Mains gas boiler upgrade"
+        " Mains gas boiler upgrade (only available to those already connected to mains gas)"
       ),
       el("label", { style: "font-weight:700;" },
         el("input", { type: "radio", name: "measures", value: "none" }),
@@ -591,69 +591,85 @@ function viewStep5() {
       )
     ),
 
-    // consent (required)
-    el("label", { "data-required": "true" },
-      el("input", { type: "checkbox", id: "q-consent" }),
-      " I agree to be contacted about eligibility."
+// commitment message (no checkbox)
+  el("div", { className: "commitment-box" },
+    el("p", {},
+      "I'm serious... I'll answer/return your call/SMS/email! ",
+      "I know that a late/missed communication will prevent me from accessing the grant with Rural Energy in the future."
     ),
+    el("p", { className: "note" },
+      "This is a free service, and our policy is to serve the most motivated and urgent enquiries."
+    ),
+    el("p", { className: "note" },
+      "You will receive an SMS from ",
+      el("strong", {}, "+44 7700 156797"),
+      " and an email to arrange a telephone appointment."
+    ),
+    el("p", { className: "note" },
+      "We will only ever call you from ",
+    el("strong", {}, "01228 812016"),
+      ". If you do not answer calls, emails, or SMS messages, you will not be able to work with us."
+    ),
+    el("p", { className: "note" },
+      "Our team are presently oversubscribed with new inquiries."
+    )
+  ),
 
     el("button", { id: "btn-submit", className: "govuk-button" }, "Submit"),
     backButton(viewStep4b)
   );
 
-  // submit handler with mandatory checks
-  document.getElementById("btn-submit").onclick = async () => {
-    const homeowner = document.getElementById("q-homeowner").value;
-    const firstName = document.getElementById("q-first").value.trim();
-    const lastName  = document.getElementById("q-last").value.trim();
-    const phone     = document.getElementById("q-phone").value.trim();
-    const email     = document.getElementById("q-email").value.trim();
-    const consent   = document.getElementById("q-consent").checked;
+// submit handler (no consent checkbox)
+document.getElementById("btn-submit").onclick = async () => {
+  const homeowner = document.getElementById("q-homeowner").value;
+  const firstName = document.getElementById("q-first").value.trim();
+  const lastName  = document.getElementById("q-last").value.trim();
+  const phone     = document.getElementById("q-phone").value.trim();
+  const email     = document.getElementById("q-email").value.trim();
 
-    // Required field checks
-    if (!homeowner) return alert("Please select whether you are the homeowner.");
-    if (!firstName) return alert("Please enter your first name.");
-    if (!lastName)  return alert("Please enter your last name.");
-    if (!phone)     return alert("Please enter your mobile number.");
-    if (!email)     return alert("Please enter your email address.");
-    if (!consent)   return alert("Please tick the consent box to continue.");
+  if (!homeowner) return alert("Please select whether you are the homeowner.");
+  if (!firstName) return alert("Please enter your first name.");
+  if (!lastName)  return alert("Please enter your last name.");
+  if (!phone)     return alert("Please enter your mobile number.");
+  if (!email)     return alert("Please enter your email address.");
 
-    const payload = {
-      status: "qualified",
-      postcode: state.postcode,
-      addressLabel: state.addressLabel,
-      uprn: state.uprn || null,
-      epc_found: !!state.epc?.found,
-      epc_band: state.epc?.band || null,
-      epc_score: state.epc?.score || null,
-      eligibilityRoute: state.eligibilityRoute,
-      property: state.property,
-      homeowner,
-      firstName,
-      lastName,
-      phone,
-      email,
-      consent
-    };
-
-    const btn = document.getElementById("btn-submit");
-    btn.disabled = true;
-    try {
-      await j(`${apiBase}/submit`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
-      });
-      stepWrap.innerHTML = "";
-      stepWrap.append(
-        el("h2", {}, "Thanks!"),
-        el("p", { className: "ok" }, "We’ve received your details and will be in touch.")
-      );
-    } catch (e) {
-      btn.disabled = false;
-      alert("Submit failed — please try again.");
-    }
+  const payload = {
+    status: "qualified",
+    postcode: state.postcode,
+    addressLabel: state.addressLabel,
+    uprn: state.uprn || null,
+    epc_found: !!state.epc?.found,
+    epc_band: state.epc?.band || null,
+    epc_score: state.epc?.score || null,
+    eligibilityRoute: state.eligibilityRoute,
+    property: state.property,
+    measures: state.measures || null, // keep if you added Step 4b
+    homeowner,
+    firstName,
+    lastName,
+    phone,
+    email
   };
+
+  const btn = document.getElementById("btn-submit");
+  btn.disabled = true;
+  try {
+    await j(`${apiBase}/submit`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    });
+    stepWrap.innerHTML = "";
+    stepWrap.append(
+      el("h2", {}, "Thanks!"),
+      el("p", { className: "ok" }, "We’ve received your details and will be in touch.")
+    );
+  } catch (e) {
+    btn.disabled = false;
+    alert("Submit failed — please try again.");
+  }
+};
+
 }
   // Start
   viewStep1();
