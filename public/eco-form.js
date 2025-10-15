@@ -366,28 +366,52 @@ stepWrap.append(
 }
 
 
-    // Step 3c: Income
-    function viewStep3c() {
-      state.step = 3;
-      setProgress();
-      stepWrap.innerHTML = "";
-      stepWrap.append(
-        el("h2", {}, "Eligibility – Income"),
-        el("p", { className: "helper" }, "Is your total annual household income below £31,000?"),
-        el("div", {}, el("label", {}, el("input", { type: "radio", name: "inc", value: "yes" }), " Yes"), el("label", { style: "margin-left:12px;" }, el("input", { type: "radio", name: "inc", value: "no" }), " No")),
-        el("button", { id: "income-next", className: "govuk-button" }, "Continue"),
-        backButton(viewStep3b)
-      );
-      $("#income-next").onclick = () => {
-        const sel = document.querySelector('input[name="inc"]:checked');
-        if (!sel) return alert("Please choose Yes or No");
-        if (sel.value === "yes") {
-          state.eligibilityRoute = "income";
-          return viewStep4();
-        }
-        showDisqualify("Based on your answers, your household does not currently meet the eligibility criteria.");
-      };
+function viewStep3c() {
+  state.step = 3;
+  setProgress();
+  stepWrap.innerHTML = "";
+
+  stepWrap.append(
+    el("h2", {}, "Eligibility – Income"),
+    el(
+      "p",
+      { className: "helper" },
+      "Is your total annual household income below £31,000?"
+    ),
+    el(
+      "div",
+      { className: "radio-block" },
+      el(
+        "label",
+        {},
+        el("input", { type: "radio", name: "inc", value: "yes" }),
+        " Yes"
+      ),
+      el(
+        "label",
+        {},
+        el("input", { type: "radio", name: "inc", value: "no" }),
+        " No"
+      )
+    ),
+    el("button", { id: "income-next", className: "govuk-button" }, "Continue"),
+    backButton(viewStep3b)
+  );
+
+  $("#income-next").onclick = () => {
+    const sel = document.querySelector('input[name="inc"]:checked');
+    if (!sel) return alert("Please choose Yes or No");
+    if (sel.value === "yes") {
+      state.eligibilityRoute = "income";
+      return viewStep4();
     }
+    // No to all → disqualify
+    showDisqualify(
+      "Based on your answers, your household does not currently meet the eligibility criteria."
+    );
+  };
+}
+
 
     // Step 4: Property
     function viewStep4() {
