@@ -1,84 +1,135 @@
-// /api/submit.js — forwards your form payload to GHL Inbound Webhook
-export const config = { runtime: "edge" };
+// /api/submit.js
+// Forwards form submissions to GoHighLevel (GHL) Inbound Webhook
 
-function cors(req, headers) {
+export const config = { runtime: "edge" }; // fast cold starts
+
+/** ----- CORS ----- */
+function cors(req, allowedOrigins = []) {
   const origin = req.headers.get("origin") || "";
-  const allow = [
-    "https://eco-form.vercel.app"
-  ];
-  if (allow.includes(origin)) {
-    headers.set("Access-Control-Allow-Origin", origin);
-    headers.set("Vary", "Origin");
+  const allow = allowedOrigins.length ? allowedOrigins : ["*"];
+
+  const headers = {
+    "Access-Control-Allow-Origin":
+      allow.includes("*") || allow.includes(origin) ? origin || "*" : allow[0] || "*",
+    "Access-Control-Allow-Methods": "POST,OPTIONS",
+    "Access-Control-Allow-Headers": "Content-Type,Authorization",
+  };
+
+  if (req.method === "OPTIONS") {
+    return new Response(null, { status: 204, headers });
   }
-  headers.set("Access-Control-Allow-Methods", "POST,OPTIONS");
-  headers.set("Access-Control-Allow-Headers", "Content-Type,Authorization");
+  return headers; // merge into real response later
 }
 
-async function readJson(req) {
-  const t = await req.text();
-  return t ? JSON.parse(t) : {};
-}
+/** ----- tiny helpers ----- */
+const required = (o, k) => (o[k] && String(o[k]).trim().length > 0);
+const emailOk = (s = "") => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s);
 
+/** ----- main handler ----- */
 export default async function handler(req) {
-  const headers = new Headers({ "Content-Type": "application/json" });
-  cors(req, headers);
-  if (req.method === "OPTIONS") return new Response(null, { status: 204, headers });
-  if (req.method !== "POST") return new Response(JSON.stringify({ error: "POST only" }), { status: 405, headers });
+  // 1) CORS
+  const corsHeaders = cors(req, [
+    "https://eco-form.vercel.app",           // your production form
+    // add any extra origins you use:
+    // "https://your-domain.com",
+    // "http://localhost:3000",
+  ]);
+  if (corsHeaders instanceof Response) return corsHeaders; // OPTIONS preflight handled
+
+  // 2) Only POST
+  if (req.method !== "POST") {
+    return new Response(JSON.stringify({ error: "POST only" }), {
+      status: 405,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+
+  // 3) Parse + validate
+  let body;
+  try {
+    body = await req.json();
+  } catch {
+    return new Response(JSON.stringify({ error: "Invalid JSON body" }), {
+      status: 400,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+
+  // Minimal sanity checks (tweak later)
+  if (!required(body, "status")) {
+    return new Response(JSON.stringify({ error: "Missing field: status" }), {
+      status: 400,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+  if (!required(body, "phone") || !required(body, "email")) {
+    return new Response(JSON.stringify({ error: "Missing phone or email" }), {
+      status: 400,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+  if (!emailOk(body.email)) {
+    return new Response(JSON.stringify({ error: "Invalid email format" }), {
+      status: 400,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+
+  // 4) Resolve destination webhook (env var in Vercel)
+  const WEBHOOK_URL =
+    process.env.GHL_WEBHOOK_URL ||
+    process.env.NEXT_PUBLIC_GHL_WEBHOOK_URL || // if you ever expose for dev (not recommended)
+    "";
+
+  if (!WEBHOOK_URL) {
+    return new Response(JSON.stringify({ error: "Webhook URL not configured" }), {
+      status: 500,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+
+  // 5) Prepare payload (pass through, plus a little metadata)
+  const payload = {
+    ...body,
+    _meta: {
+      source: "eco-form",
+      receivedAt: new Date().toISOString(),
+      ip: req.headers.get("x-forwarded-for") || null,
+      userAgent: req.headers.get("user-agent") || null,
+    },
+  };
+
+  // 6) Send to GHL with a timeout
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 8000); // 8s safeguard
 
   try {
-    const body = await readJson(req);
-
-    // 💡 minimal validation (front-end already does required checks)
-    const required = ["firstName","lastName","email","phone","postcode","addressLabel"];
-    for (const k of required) {
-      if (!body[k]) return new Response(JSON.stringify({ error: `Missing ${k}` }), { status: 400, headers });
-    }
-
-    // GHL fields
-    const ghlPayload = {
-      firstName: body.firstName,
-      lastName:  body.lastName,
-      email:     body.email,
-      phone:     body.phone,
-
-      // Custom fields 
-      postcode:        body.postcode,
-      address:         body.addressLabel,
-      homeowner:       body.homeowner, // "yes" | "no"
-      eligibilityRoute:body.eligibilityRoute, // benefit | medical | income
-      measures:        body.measures || "",   // air_solar | air_solar_wall | boiler
-      epc_found:       body.epc_found,
-      epc_band:        body.epc_band || "",
-      epc_score:       body.epc_score ?? "",
-      heating:         body.property?.heating || "",
-      walls:           body.property?.walls || "",
-      solar:           body.property?.solar || "",
-      listed:          body.property?.listed || "",
-      reason:          body.property?.reason || "",
-      committed:       !!body.committed,      // your “I’m serious” checkbox
-
-      // Extras to help routing in GHL
-      tags:            "ECO4-Lead," + (body.eligibilityRoute || "unknown"),
-      source:          "Website Eligibility Form"
-    };
-
-    const url = process.env.GHL_WEBHOOK_URL;
-    if (!url) return new Response(JSON.stringify({ error: "GHL_WEBHOOK_URL missing" }), { status: 500, headers });
-
-    const r = await fetch(url, {
+    const r = await fetch(WEBHOOK_URL, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(ghlPayload)
+      body: JSON.stringify(payload),
+      signal: controller.signal,
     });
+    clearTimeout(timeout);
 
     if (!r.ok) {
-      const t = await r.text().catch(() => "");
-      return new Response(JSON.stringify({ error: "GHL webhook failed", detail: t.slice(0, 300) }), { status: 502, headers });
+      const text = await r.text().catch(() => "");
+      return new Response(
+        JSON.stringify({ error: "GHL webhook error", status: r.status, body: text.slice(0, 500) }),
+        { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
     }
 
-    return new Response(JSON.stringify({ ok: true }), { status: 200, headers });
-  } catch {
-    return new Response(JSON.stringify({ error: "Submit failed" }), { status: 500, headers });
+    return new Response(JSON.stringify({ ok: true }), {
+      status: 200,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  } catch (err) {
+    clearTimeout(timeout);
+    const msg = (err && err.name === "AbortError") ? "Timeout sending to GHL" : "Fetch error";
+    return new Response(JSON.stringify({ error: msg }), {
+      status: 502,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
   }
 }
-
