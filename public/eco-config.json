@@ -1,1 +1,72 @@
+// window-scoped so the host page can set/override before eco-form.js loads
+
+window.ECO_FORM_CONFIG = {
+  apiBase: null, // null = use data-api="/api" on div; or set absolute URL here
+
+  thresholds: {
+    qualifyMaxScore: 60,     // <=60 qualifies
+  },
+
+  copy: {
+    headings: {
+      checkProperty: "Check your property",
+      epc: "Energy Performance Certificate",
+      benefits: "Eligibility – Benefits",
+      medical: "Eligibility – Medical",
+      income: "Eligibility – Income",
+      property: "Your Property",
+      measures: "Measures of Interest",
+      contact: "Contact Details",
+      notEligible: "Sorry, not eligible",
+      thanks: "Thanks!",
+    },
+    helper: {
+      postcodePrompt: "Enter your postcode and choose your address.",
+      epcChecking: "We’re checking your EPC…",
+      incomePrompt: "Is your total annual household income below £31,000?",
+      measuresPrompt: "Which measures are you interested in?",
+    },
+    medicalList: [
+      "Respiratory (e.g. asthma, COPD)",
+      "Cardiovascular (e.g. heart disease)",
+      "Limited mobility",
+      "Immunosuppressed (e.g. cancer treatment, autoimmune therapy)",
+    ],
+    disqualifyMessages: {
+      highScore: score => `Your EPC score is ${score}, which is above the qualifying threshold (D60).`,
+      solar: "Properties with existing solar panels are not eligible under this scheme.",
+      noneMeasures: "At this time, we can only help with Government approved measures. We may reach out if additional measures which may suit your home become available.",
+      noRoute: "Based on your answers, your household does not currently meet the eligibility criteria.",
+    },
+    commitment: {
+      label: `I'm serious... I'll answer/return your call/SMS/email! I know that a late/missed communication will prevent me from accessing the grant with Rural Energy in the future.`,
+      notes: [
+        "This is a free service, and our policy is to serve the most motivated and urgent enquiries.",
+        `You will receive an SMS from +44 7700 156797 and an email to arrange a telephone appointment.`,
+        `We will only ever call you from 01228 812016. If you do not answer calls, emails, or SMS messages, you will not be able to work with us.`,
+        "Our team are presently oversubscribed with new inquiries."
+      ]
+    }
+  },
+
+  options: {
+    benefits: [
+      { value: "none", label: "NONE OF THE ABOVE", emph: true },
+      { value: "uc",   label: "Universal Credit" },
+      { value: "pc",   label: "Pension Credit" },
+      { value: "esa",  label: "Income-related ESA" },
+      { value: "jsa",  label: "Income-based JSA" },
+      { value: "is",   label: "Means-tested Income Support" },
+      { value: "hb",   label: "Housing Benefit" },
+    ],
+    heating: ["", "oil", "LPG", "wood-coal", "electric", "heat pump", "other"],
+    walls: ["", "cavity", "solid", "both"],
+    measures: [
+      { value: "air_solar",       label: "Air source heating and solar panels" },
+      { value: "air_solar_wall",  label: "Air source heating, solar panels and wall insulation" },
+      { value: "boiler",          label: "Mains gas boiler upgrade (only available to those already connected to mains gas)" },
+      { value: "none",            label: "None of the above", emph: true },
+    ],
+  },
+};
 

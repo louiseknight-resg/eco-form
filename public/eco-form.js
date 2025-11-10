@@ -1,4 +1,4 @@
-// /public/eco-form.js
+// IIFE + tiny helpers
 (() => {
   const $ = sel => document.querySelector(sel);
   const el = (tag, props = {}, ...kids) => {
@@ -7,13 +7,44 @@
     kids.flat().forEach(k => n.appendChild(typeof k === "string" ? document.createTextNode(k) : k));
     return n;
   };
-  const j = (url, opts = {}) => fetch(url, opts).then(r => r.json());
 
-  function mount() {
+  // Hardened JSON fetch (timeout + http errors)
+const j = async (url, opts = {}) => {
+  const ctrl = new AbortController();
+  const t = setTimeout(() => ctrl.abort(), 10000);
+  try {
+    const r = await fetch(url, { signal: ctrl.signal, ...opts });
+    if (!r.ok) {
+      const text = await r.text().catch(() => "");
+      throw new Error(`HTTP ${r.status}: ${text.slice(0,200)}`);
+    }
+    if (r.status === 204) return null;
+    return await r.json();
+  } finally { clearTimeout(t); }
+};
+
+// Load /eco-config.json (from /public)
+async function loadConfig() {
+  try { return await j('/eco-config.json'); }
+  catch { return {}; } // safe fallback if file missing
+}
+
+// Simple {placeholders} helper for messages
+function txt(str, map) {
+  return String(str || '').replace(/\{(\w+)\}/g, (_, k) => map?.[k] ?? '');
+}
+
+// API base + container  
+  async function mount() {
     const host = document.getElementById("eco-form");
     if (!host) return;
-    const apiBase = host.getAttribute("data-api") || "/api";
+      // config load
+  const CFG = await loadConfig();
+  // config driven values
+  const apiBase = (CFG.apiBase || host.getAttribute("data-api") || "/api");
+  const QUALIFY_MAX = (CFG.thresholds?.qualifyMaxScore ?? 60);
 
+  // Progress + state
     host.innerHTML = "";
     const progress = el("div", { className: "progress" }, el("span"));
     const stepWrap = el("div");
@@ -21,7 +52,7 @@
 
     const state = {
       step: 1,
-      totalSteps: 5,
+      totalSteps: 6,
       postcode: "",
       addresses: [],
       addressLabel: "",
@@ -36,13 +67,13 @@
       const pct = Math.round(((state.step - 1) / (state.totalSteps - 1)) * 100);
       progress.firstChild.style.width = pct + "%";
     };
-
+// Back Button
     function backButton(goToFn) {
       const b = el("button", { className: "govuk-button govuk-button--secondary back-btn", type: "button" }, "Back");
       b.onclick = goToFn;
       return b;
     }
-
+// Disqualify screen (with opt-in) - come back to change this??? 
     function showDisqualify(message, allowOptIn = true) {
       state.step = Math.min(state.step + 1, state.totalSteps);
       setProgress();
@@ -237,7 +268,7 @@ function viewStep2() {
         body: JSON.stringify({
           postcode: state.postcode,
           uprn: state.uprn,
-          addressLabel: state.addressLabel   // <-- added
+          addressLabel: state.addressLabel 
         })
       });
       state.epc = out || { found: false };
@@ -251,9 +282,14 @@ function viewStep2() {
           el("p", {}, "We found your certificate:"),
           el("p", {}, "EPC rating: ", el("strong", {}, band))
         );
-        if (score != null && score > 60) {
-          return showDisqualify(`Your EPC score is ${score}, which is above the qualifying threshold (D60).`);
-        }
+       if (score != null && score > QUALIFY_MAX) {
+  const msg = txt(
+    CFG.copy?.disqualifyMessages?.highScore
+      || "Your EPC score is {score}, which is above the qualifying threshold.",
+    { score }
+  );
+  return showDisqualify(msg);
+}
       } else {
         box.append(
           el("p", { className: "warn" }, "No EPC found. You may still qualify."),
@@ -274,8 +310,8 @@ function viewStep2() {
   })();
 }
 
-
-    // Step 3a: Benefits (early-exit)
+// Step 3 - Eligibility (Route 1 + 3)
+    // Step 3a: Benefits
     function viewStep3() {
       state.step = 3;
       setProgress();
@@ -287,7 +323,7 @@ function viewStep2() {
         el(
           "div",
           {},
-          el("label", { style: "margin-top:8px; font-weight:700; display:block;" }, el("input", { type: "radio", name: "benefit", value: "none" }), " NONE OF THE ABOVE"),
+          el("label", { style: "margin-top:8px; font-weight:700; display:block;" }, el("input", { type: "radio", name: "benefit", value: "none" }), " NONE OF THE BELOW"),
           el("label", {}, el("input", { type: "radio", name: "benefit", value: "uc" }), " Universal Credit"),
           el("label", {}, el("input", { type: "radio", name: "benefit", value: "pc" }), " Pension Credit"),
           el("label", {}, el("input", { type: "radio", name: "benefit", value: "esa" }), " Income-related ESA"),
@@ -310,7 +346,7 @@ function viewStep2() {
       };
     }
 
-// Step 3b: Medical (early-exit)
+// Step 3b: Medical
 function viewStep3b() {
   state.step = 3;
   setProgress();
@@ -365,7 +401,7 @@ stepWrap.append(
   };
 }
 
-
+// STEP 3c Route 1 means-tested
 function viewStep3c() {
   state.step = 3;
   setProgress();
@@ -423,7 +459,7 @@ function viewStep4() {
 
   stepWrap.append(
     el("h2", {}, "Your Property"),
-
+// Heating
     el("label", {}, "Main heating", req()),
     el(
       "select",
@@ -432,7 +468,7 @@ function viewStep4() {
         el("option", { value: v }, v || "Choose…")
       )
     ),
-
+// Wall Type
     el("label", {}, "Wall type", req()),
     el(
       "select",
@@ -441,7 +477,7 @@ function viewStep4() {
         el("option", { value: v }, v || "Choose…")
       )
     ),
-
+// Solar panels
     el("label", {}, "Do you have solar panels?", req()),
     el(
       "select",
@@ -450,7 +486,7 @@ function viewStep4() {
       el("option", { value: "no" }, "No"),
       el("option", { value: "yes" }, "Yes")
     ),
-
+// Grade Listed
     el("label", {}, "Is the property listed?", req()),
     el(
       "select",
@@ -460,14 +496,14 @@ function viewStep4() {
       el("option", { value: "yes" }, "Yes"),
       el("option", { value: "not_sure" }, "Not sure")
     ),
-
+// Reason for applying
     el("label", {}, "Main reason for reaching out", req()),
     el("textarea", { id: "p-reason", rows: 3 }),
 
     el("button", { id: "p-next", className: "govuk-button" }, "Continue"),
     backButton(viewStep3)
   );
-
+// Error message when required field is missed
   document.getElementById("p-next").onclick = () => {
     const heating = document.getElementById("p-heat").value;
     const walls   = document.getElementById("p-walls").value;
@@ -532,7 +568,7 @@ function viewStep4b() {
     if (!sel) return alert("Please select one option");
 
     state.measures = sel.value;
-
+// come back to change this message below ****
     if (sel.value === "none") {
       return showDisqualify(
         "At this time, we can only help with Government approved measures. We may reach out if additional measures which may suit your home become available.",
