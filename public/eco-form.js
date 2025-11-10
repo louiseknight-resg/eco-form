@@ -444,8 +444,8 @@
 
       const req = () => el("span", { className: "required-asterisk" }, " *");
 
-      const heatingOpts = OPT("heating", ["", "oil", "LPG", "wood-coal", "electric", "heat pump", "other"]);
-      const wallOpts    = OPT("walls",   ["", "cavity", "solid", "both"]);
+      const heatingOpts = OPT("heating", ["", "Oil", "LPG", "Wood-coal", "Electric", "Heat Pump", "Other"]);
+      const wallOpts    = OPT("walls",   ["", "cavity", "solid", "Mixed Walls", "Other"]);
 
       stepWrap.append(
         el("h2", {}, H("property", "Your Property")),
