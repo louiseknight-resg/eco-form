@@ -1,50 +1,57 @@
-// IIFE + tiny helpers
+// /public/eco-form.js
 (() => {
+  // ---------- tiny helpers ----------
   const $ = sel => document.querySelector(sel);
   const el = (tag, props = {}, ...kids) => {
     const n = document.createElement(tag);
-    Object.entries(props).forEach(([k, v]) => (k in n ? (n[k] = v) : n.setAttribute(k, v)));
-    kids.flat().forEach(k => n.appendChild(typeof k === "string" ? document.createTextNode(k) : k));
+    Object.entries(props || {}).forEach(([k, v]) =>
+      (k in n) ? (n[k] = v) : n.setAttribute(k, v)
+    );
+    kids.flat().forEach(k =>
+      n.appendChild(typeof k === "string" ? document.createTextNode(k) : k)
+    );
     return n;
   };
 
-  // Hardened JSON fetch (timeout + http errors)
-const j = async (url, opts = {}) => {
-  const ctrl = new AbortController();
-  const t = setTimeout(() => ctrl.abort(), 10000);
-  try {
-    const r = await fetch(url, { signal: ctrl.signal, ...opts });
-    if (!r.ok) {
-      const text = await r.text().catch(() => "");
-      throw new Error(`HTTP ${r.status}: ${text.slice(0,200)}`);
+  // string templating: txt("Your score {score}", {score: 65})
+  const txt = (str, map) =>
+    String(str ?? "").replace(/\{(\w+)\}/g, (_, k) => map?.[k] ?? "");
+
+  // hardened JSON fetch (timeout + http errors)
+  const j = async (url, opts = {}) => {
+    const ctrl = new AbortController();
+    const t = setTimeout(() => ctrl.abort(), 10000);
+    try {
+      const r = await fetch(url, { signal: ctrl.signal, ...opts });
+      if (!r.ok) {
+        const text = await r.text().catch(() => "");
+        throw new Error(`HTTP ${r.status}: ${text.slice(0, 200)}`);
+      }
+      if (r.status === 204) return null;
+      return await r.json();
+    } finally {
+      clearTimeout(t);
     }
-    if (r.status === 204) return null;
-    return await r.json();
-  } finally { clearTimeout(t); }
-};
+  };
 
-// Load /eco-config.json (from /public)
-async function loadConfig() {
-  try { return await j('/eco-config.json'); }
-  catch { return {}; } // safe fallback if file missing
-}
-
-// Simple {placeholders} helper for messages
-function txt(str, map) {
-  return String(str || '').replace(/\{(\w+)\}/g, (_, k) => map?.[k] ?? '');
-}
-
-// API base + container  
+  // ---------- app mount ----------
   async function mount() {
     const host = document.getElementById("eco-form");
     if (!host) return;
-      // config load
-  const CFG = await loadConfig();
-  // config driven values
-  const apiBase = (CFG.apiBase || host.getAttribute("data-api") || "/api");
-  const QUALIFY_MAX = (CFG.thresholds?.qualifyMaxScore ?? 60);
 
-  // Progress + state
+    // read config injected by /eco-config.js (window-scoped)
+    const CFG = (window.ECO_FORM_CONFIG || {});
+
+    // convenience getters (safe fallbacks)
+    const H   = (k, d) => (CFG.copy?.headings?.[k] ?? d);
+    const C   = (k, d) => (CFG.copy?.helper?.[k]   ?? d);
+    const DM  = (k)    =>  CFG.copy?.disqualifyMessages?.[k]; // may be fn or string
+    const OPT = (k, d) => (CFG.options?.[k]        ?? d);
+
+    const apiBase     = (CFG.apiBase || host.getAttribute("data-api") || "/api");
+    const QUALIFY_MAX = (CFG.thresholds?.qualifyMaxScore ?? 60);
+
+    // container + state
     host.innerHTML = "";
     const progress = el("div", { className: "progress" }, el("span"));
     const stepWrap = el("div");
@@ -52,7 +59,7 @@ function txt(str, map) {
 
     const state = {
       step: 1,
-      totalSteps: 6,
+      totalSteps: 6, // Address → EPC → Eligibility → Property → Measures → Contact
       postcode: "",
       addresses: [],
       addressLabel: "",
@@ -60,6 +67,7 @@ function txt(str, map) {
       epc: null, // {found, band, score}
       eligibilityRoute: null, // 'benefit' | 'medical' | 'income'
       property: { heating: "", walls: "", solar: "no", listed: "not_sure", reason: "" },
+      measures: null,
       answers: { homeowner: "", firstName: "", lastName: "", phone: "", email: "", consent: false }
     };
 
@@ -67,269 +75,282 @@ function txt(str, map) {
       const pct = Math.round(((state.step - 1) / (state.totalSteps - 1)) * 100);
       progress.firstChild.style.width = pct + "%";
     };
-// Back Button
-    function backButton(goToFn) {
-      const b = el("button", { className: "govuk-button govuk-button--secondary back-btn", type: "button" }, "Back");
+
+    const backButton = (goToFn) => {
+      const b = el(
+        "button",
+        { className: "govuk-button govuk-button--secondary back-btn", type: "button" },
+        "Back"
+      );
       b.onclick = goToFn;
       return b;
-    }
-// Disqualify screen (with opt-in) - come back to change this??? 
+    };
+
+    // disqualify (with optional opt-in)
     function showDisqualify(message, allowOptIn = true) {
       state.step = Math.min(state.step + 1, state.totalSteps);
       setProgress();
       stepWrap.innerHTML = "";
-      stepWrap.append(el("h2", {}, "Sorry, not eligible"), el("p", { className: "warn" }, message));
-      if (allowOptIn) {
-        const optBlock = el(
+      stepWrap.append(
+        el("h2", {}, H("notEligible", "Sorry, not eligible")),
+        el("p", { className: "warn" }, message)
+      );
+
+      if (!allowOptIn) return;
+
+      const optBlock = el(
+        "div",
+        { className: "optin-block" },
+        el(
+          "label",
+          {},
+          el("input", { type: "checkbox", id: "optin" }),
+          " Keep me informed if eligibility rules change"
+        ),
+        el(
           "div",
-          { className: "optin-block" },
-          el("label", {}, el("input", { type: "checkbox", id: "optin" }), " Keep me informed if eligibility rules change"),
-          el(
-            "div",
-            { id: "optin-form", className: "hidden" },
-            el("label", {}, "First name"),
-            el("input", { type: "text", id: "optin-name" }),
-            el("label", {}, "Email"),
-            el("input", { type: "email", id: "optin-email" }),
-            el("label", {}, "Phone"),
-            el("input", { type: "tel", id: "optin-phone" })
+          { id: "optin-form", className: "hidden" },
+          el("label", {}, "First name"),
+          el("input", { type: "text", id: "optin-name" }),
+          el("label", {}, "Email"),
+          el("input", { type: "email", id: "optin-email" }),
+          el("label", {}, "Phone"),
+          el("input", { type: "tel", id: "optin-phone" })
+        ),
+        el("button", { id: "btn-finish", className: "govuk-button" }, "Finish")
+      );
+
+      stepWrap.append(optBlock);
+
+      $("#optin").onchange = () => {
+        $("#optin-form").classList.toggle("hidden", !$("#optin").checked);
+      };
+
+      $("#btn-finish").onclick = async () => {
+        if ($("#optin").checked) {
+          const name  = $("#optin-name").value.trim();
+          const email = $("#optin-email").value.trim();
+          const phone = $("#optin-phone").value.trim();
+          try {
+            await j(`${apiBase}/submit`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                status: "disqualified_optin",
+                postcode: state.postcode,
+                addressLabel: state.addressLabel,
+                uprn: state.uprn || null,
+                epc_found: !!state.epc?.found,
+                epc_band: state.epc?.band || null,
+                epc_score: state.epc?.score || null,
+                name,
+                email,
+                phone
+              })
+            });
+          } catch (_) {}
+        }
+        stepWrap.innerHTML = "";
+        stepWrap.append(el("h2", {}, H("thanks", "Thanks!")), el("p", { className: "note" }, "We’ll be in touch if things change."));
+      };
+    }
+
+    // ---------- Step 1: Address lookup (with manual fallback) ----------
+    function viewStep1() {
+      state.step = 1;
+      setProgress();
+      stepWrap.innerHTML = "";
+
+      stepWrap.append(
+        el("h2", {}, H("checkProperty", "Check your property")),
+        el("p", { className: "helper" }, C("postcodePrompt", "Enter your postcode and choose your address.")),
+        el("label", {}, "Postcode"),
+        el("input", { type: "text", id: "eco-postcode", placeholder: "e.g. CA1 2AB", value: state.postcode }),
+        el("button", { id: "btn-find", className: "govuk-button" }, "Find address"),
+        el(
+          "div",
+          { id: "addr-block", className: "hidden" },
+          el("label", {}, "Select your address"),
+          el("select", { id: "eco-addr" }),
+          el("div", { style: "margin-top:8px;" },
+            el("button", { id: "btn-continue", className: "govuk-button" }, "Continue")
           ),
-          el("button", { id: "btn-finish", className: "govuk-button" }, "Finish")
-        );
-        stepWrap.append(optBlock);
+          el("p", { className: "note" }, "Can’t find it? ", el("a", { href: "#", id: "enter-manually" }, "Enter manually"))
+        ),
+        el(
+          "div",
+          { id: "manual-block", className: "hidden" },
+          el("p", { id: "manual-msg", className: "warn hidden" }, "We couldn’t find your address — please enter it manually."),
+          el("label", {}, "Address line 1"),
+          el("input", { type: "text", id: "manual-line" }),
+          el("label", {}, "Postcode"),
+          el("input", { type: "text", id: "manual-post", value: state.postcode }),
+          el("button", { id: "btn-manual-continue", className: "govuk-button" }, "Continue")
+        )
+      );
 
-        $("#optin").onchange = () => {
-          $("#optin-form").classList.toggle("hidden", !$("#optin").checked);
-        };
+      const hideManualMsg = () => $("#manual-msg")?.classList.add("hidden");
+      const showManualMsg = () => $("#manual-msg")?.classList.remove("hidden");
 
-        $("#btn-finish").onclick = async () => {
-          if ($("#optin").checked) {
-            const name = $("#optin-name").value.trim();
-            const email = $("#optin-email").value.trim();
-            const phone = $("#optin-phone").value.trim();
-            try {
-              await j(`${apiBase}/submit`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                  status: "disqualified_optin",
-                  postcode: state.postcode,
-                  addressLabel: state.addressLabel,
-                  uprn: state.uprn || null,
-                  epc_found: !!state.epc?.found,
-                  epc_band: state.epc?.band || null,
-                  epc_score: state.epc?.score || null,
-                  name,
-                  email,
-                  phone
-                })
-              });
-            } catch (e) {}
-          }
-          stepWrap.innerHTML = "";
-          stepWrap.append(el("h2", {}, "Thanks!"), el("p", { className: "note" }, "We’ll be in touch if things change."));
-        };
-      }
-    }
+      $("#btn-find").onclick = async () => {
+        const raw = $("#eco-postcode").value.trim();
+        if (!raw) return alert("Please enter a postcode");
+        state.postcode = raw;
 
-// Step 1: Address lookup (with manual fallback + message)
-function viewStep1() {
-  state.step = 1;
-  setProgress();
-  stepWrap.innerHTML = "";
-
-  stepWrap.append(
-    el("h2", {}, "Check your property"),
-    el("p", { className: "helper" }, "Enter your postcode and choose your address."),
-    el("label", {}, "Postcode"),
-    el("input", { type: "text", id: "eco-postcode", placeholder: "e.g. CA1 2AB", value: state.postcode }),
-    el("button", { id: "btn-find", className: "govuk-button" }, "Find address"),
-    el(
-      "div",
-      { id: "addr-block", className: "hidden" },
-      el("label", {}, "Select your address"),
-      el("select", { id: "eco-addr" }),
-      el("div", { style: "margin-top:8px;" },
-        el("button", { id: "btn-continue", className: "govuk-button" }, "Continue")
-      ),
-      el("p", { className: "note" }, "Can’t find it? ",
-        el("a", { href: "#", id: "enter-manually" }, "Enter manually")
-      )
-    ),
-    el(
-      "div",
-      { id: "manual-block", className: "hidden" },
-      // 👇 this message is shown only when lookup fails/returns no results
-      el("p", { id: "manual-msg", className: "warn hidden" }, "We couldn’t find your address — please enter it manually."),
-      el("label", {}, "Address line 1"),
-      el("input", { type: "text", id: "manual-line" }),
-      el("label", {}, "Postcode"),
-      el("input", { type: "text", id: "manual-post", value: state.postcode }),
-      el("button", { id: "btn-manual-continue", className: "govuk-button" }, "Continue")
-    )
-  );
-
-  const hideManualMsg = () => {
-    const m = document.getElementById("manual-msg");
-    if (m) m.classList.add("hidden");
-  };
-  const showManualMsg = () => {
-    const m = document.getElementById("manual-msg");
-    if (m) m.classList.remove("hidden");
-  };
-
-  document.getElementById("btn-find").onclick = async () => {
-    const raw = document.getElementById("eco-postcode").value.trim();
-    if (!raw) return alert("Please enter a postcode");
-    state.postcode = raw;
-
-    // reset UI state before lookup
-    hideManualMsg();
-    document.getElementById("btn-find").disabled = true;
-
-    try {
-      const data = await j(`${apiBase}/address-lookup?postcode=${encodeURIComponent(raw)}`);
-      state.addresses = data.options || [];
-      const hasOptions = state.addresses.length > 0;
-
-      // toggle blocks
-      document.getElementById("addr-block").classList.toggle("hidden", !hasOptions);
-      document.getElementById("manual-block").classList.toggle("hidden", hasOptions);
-
-      if (hasOptions) {
-        // fill dropdown + ensure the warning is hidden
-        const sel = document.getElementById("eco-addr");
-        sel.innerHTML = "";
-        state.addresses.forEach(o => sel.appendChild(el("option", { value: o.id }, o.label)));
         hideManualMsg();
-      } else {
-        // show manual + warning message
-        document.getElementById("manual-post").value = state.postcode;
-        showManualMsg();
-      }
-    } catch (e) {
-      // API error → go manual + show warning
-      document.getElementById("addr-block").classList.add("hidden");
-      document.getElementById("manual-block").classList.remove("hidden");
-      document.getElementById("manual-post").value = state.postcode;
-      showManualMsg();
-    } finally {
-      document.getElementById("btn-find").disabled = false;
+        $("#btn-find").disabled = true;
+
+        try {
+          const data = await j(`${apiBase}/address-lookup?postcode=${encodeURIComponent(raw)}`);
+          state.addresses = data.options || [];
+          const hasOptions = state.addresses.length > 0;
+
+          $("#addr-block").classList.toggle("hidden", !hasOptions);
+          $("#manual-block").classList.toggle("hidden", hasOptions);
+
+          if (hasOptions) {
+            const sel = $("#eco-addr");
+            sel.innerHTML = "";
+            state.addresses.forEach(o => sel.appendChild(el("option", { value: o.id }, o.label)));
+            hideManualMsg();
+          } else {
+            $("#manual-post").value = state.postcode;
+            showManualMsg();
+          }
+        } catch (_) {
+          $("#addr-block").classList.add("hidden");
+          $("#manual-block").classList.remove("hidden");
+          $("#manual-post").value = state.postcode;
+          showManualMsg();
+        } finally {
+          $("#btn-find").disabled = false;
+        }
+      };
+
+      $("#btn-continue").onclick = () => {
+        const sel = $("#eco-addr");
+        const picked = state.addresses.find(o => o.id === sel.value);
+        if (!picked) return alert("Please select your address");
+        state.addressLabel = picked.label;
+        state.uprn        = picked.uprn || "";
+        viewStep2();
+      };
+
+      $("#enter-manually").onclick = (e) => {
+        e.preventDefault();
+        hideManualMsg(); // user explicitly chose manual
+        $("#addr-block").classList.add("hidden");
+        $("#manual-block").classList.remove("hidden");
+        $("#manual-post").value = state.postcode || $("#eco-postcode").value.trim();
+      };
+
+      $("#btn-manual-continue").onclick = () => {
+        const line = $("#manual-line").value.trim();
+        const post = $("#manual-post").value.trim();
+        if (!line || !post) return alert("Please enter address and postcode");
+        state.addressLabel = `${line}, ${post}`;
+        state.uprn         = "";
+        state.postcode     = post;
+        viewStep2();
+      };
     }
-  };
 
-  document.getElementById("btn-continue").onclick = () => {
-    const sel = document.getElementById("eco-addr");
-    const picked = state.addresses.find(o => o.id === sel.value);
-    if (!picked) return alert("Please select your address");
-    state.addressLabel = picked.label;
-    state.uprn = picked.uprn || "";
-    viewStep2();
-  };
+    // ---------- Step 2: EPC lookup + early disqualify by score ----------
+    function viewStep2() {
+      state.step = 2;
+      setProgress();
+      stepWrap.innerHTML = "";
 
-  document.getElementById("enter-manually").onclick = e => {
-    e.preventDefault();
-    // User chose manual on purpose → keep message hidden
-    hideManualMsg();
-    document.getElementById("addr-block").classList.add("hidden");
-    document.getElementById("manual-block").classList.remove("hidden");
-    document.getElementById("manual-post").value = state.postcode || document.getElementById("eco-postcode").value.trim();
-  };
+      stepWrap.append(
+        el("h2", {}, H("epc", "Energy Performance Certificate")),
+        el("p", { className: "helper" }, C("epcChecking", "We’re checking your EPC…")),
+        el("div", { className: "epc", id: "epc-box" }, "Checking...")
+      );
 
-  document.getElementById("btn-manual-continue").onclick = () => {
-    const line = document.getElementById("manual-line").value.trim();
-    const post = document.getElementById("manual-post").value.trim();
-    if (!line || !post) return alert("Please enter address and postcode");
-    state.addressLabel = `${line}, ${post}`;
-    state.uprn = "";
-    state.postcode = post;
-    viewStep2();
-  };
-}
+      (async () => {
+        try {
+          const out = await j(`${apiBase}/epc-search`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              postcode: state.postcode,
+              uprn: state.uprn,
+              addressLabel: state.addressLabel
+            })
+          });
 
+          state.epc = out || { found: false };
+          const box = $("#epc-box");
+          box.innerHTML = "";
 
-// Step 2: EPC check & show results (band-only display)
-function viewStep2() {
-  state.step = 2;
-  setProgress();
-  stepWrap.innerHTML = "";
+          if (out.found) {
+            const band  = out.band || "N/A";
+            const score = (typeof out.score === "number") ? out.score : null;
 
-  stepWrap.append(
-    el("h2", {}, "Energy Performance Certificate"),
-    el("p", { className: "helper" }, "We’re checking your EPC…"),
-    el("div", { className: "epc", id: "epc-box" }, "Checking...")
-  );
+            box.append(
+              el("p", {}, "We found your certificate:"),
+              el("p", {}, "EPC rating: ", el("strong", {}, band))
+            );
 
-  (async () => {
-    try {
-      const out = await j(`${apiBase}/epc-search`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          postcode: state.postcode,
-          uprn: state.uprn,
-          addressLabel: state.addressLabel 
-        })
-      });
-      state.epc = out || { found: false };
-      const box = $("#epc-box");
-      box.innerHTML = "";
+            if (score != null && score > QUALIFY_MAX) {
+              const m = DM("highScore");
+              const message = (typeof m === "function")
+                ? m(score)
+                : txt(m || "Your EPC score is {score}, which is above the qualifying threshold.", { score });
+              return showDisqualify(message);
+            }
+          } else {
+            box.append(
+              el("p", { className: "warn" }, "No EPC found. You may still qualify."),
+              el("p", { className: "note" }, "We’ll ask a few questions to check eligibility.")
+            );
+          }
 
-      if (out.found) {
-        const band = out.band || "N/A";
-        const score = typeof out.score === "number" ? out.score : null;
-        box.append(
-          el("p", {}, "We found your certificate:"),
-          el("p", {}, "EPC rating: ", el("strong", {}, band))
-        );
-       if (score != null && score > QUALIFY_MAX) {
-  const msg = txt(
-    CFG.copy?.disqualifyMessages?.highScore
-      || "Your EPC score is {score}, which is above the qualifying threshold.",
-    { score }
-  );
-  return showDisqualify(msg);
-}
-      } else {
-        box.append(
-          el("p", { className: "warn" }, "No EPC found. You may still qualify."),
-          el("p", { className: "note" }, "We’ll ask a few questions to check eligibility.")
-        );
-      }
+          const cont = el("button", { id: "epc-continue", className: "govuk-button" }, "Continue");
+          const back = backButton(viewStep1);
+          stepWrap.append(cont, back);
+          cont.onclick = () => viewStep3();
 
-      const cont = el("button", { id: "epc-continue", className: "govuk-button" }, "Continue");
-      const back = backButton(viewStep1);
-      stepWrap.append(cont, back);
-      cont.onclick = () => viewStep3();
-    } catch (e) {
-      $("#epc-box").innerHTML = "Lookup failed. We can still proceed.";
-      const cont = el("button", { id: "epc-continue", className: "govuk-button" }, "Continue");
-      stepWrap.append(cont, backButton(viewStep1));
-      cont.onclick = () => viewStep3();
+        } catch (_) {
+          $("#epc-box").innerHTML = "Lookup failed. We can still proceed.";
+          const cont = el("button", { id: "epc-continue", className: "govuk-button" }, "Continue");
+          stepWrap.append(cont, backButton(viewStep1));
+          cont.onclick = () => viewStep3();
+        }
+      })();
     }
-  })();
-}
 
-// Step 3 - Eligibility (Route 1 + 3)
-    // Step 3a: Benefits
+    // ---------- Step 3a: Benefits ----------
     function viewStep3() {
       state.step = 3;
       setProgress();
       stepWrap.innerHTML = "";
 
+      // benefits options are config-driven; keep "none" first if emph=true
+      const benefits = OPT("benefits", [
+        { value: "none", label: "NONE OF THE BELOW", emph: true },
+        { value: "uc",   label: "Universal Credit" },
+        { value: "pc",   label: "Pension Credit" },
+        { value: "esa",  label: "Income-related ESA" },
+        { value: "jsa",  label: "Income-based JSA" },
+        { value: "is",   label: "Means-tested Income Support" },
+        { value: "hb",   label: "Housing Benefit" }
+      ]);
+
       stepWrap.append(
-        el("h2", {}, "Eligibility – Benefits"),
+        el("h2", {}, H("benefits", "Eligibility – Benefits")),
         el("p", { className: "helper" }, "Does someone in the household receive one of the following?"),
         el(
           "div",
           {},
-          el("label", { style: "margin-top:8px; font-weight:700; display:block;" }, el("input", { type: "radio", name: "benefit", value: "none" }), " NONE OF THE BELOW"),
-          el("label", {}, el("input", { type: "radio", name: "benefit", value: "uc" }), " Universal Credit"),
-          el("label", {}, el("input", { type: "radio", name: "benefit", value: "pc" }), " Pension Credit"),
-          el("label", {}, el("input", { type: "radio", name: "benefit", value: "esa" }), " Income-related ESA"),
-          el("label", {}, el("input", { type: "radio", name: "benefit", value: "jsa" }), " Income-based JSA"),
-          el("label", {}, el("input", { type: "radio", name: "benefit", value: "is" }), " Means-tested Income Support"),
-          el("label", {}, el("input", { type: "radio", name: "benefit", value: "hb" }), " Housing Benefit")
+          ...benefits.map(opt =>
+            el(
+              "label",
+              { style: (opt.emph ? "margin-top:8px; font-weight:700; display:block;" : "") },
+              el("input", { type: "radio", name: "benefit", value: opt.value }),
+              ` ${opt.label}`
+            )
+          )
         ),
         el("button", { id: "benefit-next", className: "govuk-button" }, "Continue"),
         backButton(viewStep2)
@@ -346,379 +367,320 @@ function viewStep2() {
       };
     }
 
-// Step 3b: Medical
-function viewStep3b() {
-  state.step = 3;
-  setProgress();
-  stepWrap.innerHTML = "";
-
-stepWrap.append(
-  el("h2", {}, "Eligibility – Medical"),
-  el(
-    "p",
-    { className: "helper" },
-    "Does someone in the household have any of these conditions?"
-  ),
-  // 👇 List the qualifying medical categories
-  el(
-    "ul",
-    { className: "hint-list" },
-    el("li", {}, "Respiratory (e.g. asthma, COPD)"),
-    el("li", {}, "Cardiovascular (e.g. heart disease)"),
-    el("li", {}, "Limited mobility"),
-    el("li", {}, "Immunosuppressed (e.g. cancer treatment, autoimmune therapy)")
-  ),
-  // 👇 Radio buttons stacked vertically
-  el(
-    "div",
-    { className: "radio-block" },
-    el(
-      "label",
-      {},
-      el("input", { type: "radio", name: "med", value: "yes" }),
-      " Yes"
-    ),
-    el(
-      "label",
-      {},
-      el("input", { type: "radio", name: "med", value: "no" }),
-      " No"
-    )
-  ),
-  el("button", { id: "medical-next", className: "govuk-button" }, "Continue"),
-  backButton(viewStep3)
-);
-
-
-  $("#medical-next").onclick = () => {
-    const sel = document.querySelector('input[name="med"]:checked');
-    if (!sel) return alert("Please choose Yes or No");
-    if (sel.value === "yes") {
-      state.eligibilityRoute = "medical";
-      return viewStep4();
-    }
-    viewStep3c();
-  };
-}
-
-// STEP 3c Route 1 means-tested
-function viewStep3c() {
-  state.step = 3;
-  setProgress();
-  stepWrap.innerHTML = "";
-
-  stepWrap.append(
-    el("h2", {}, "Eligibility – Income"),
-    el(
-      "p",
-      { className: "helper" },
-      "Is your total annual household income below £31,000?"
-    ),
-    el(
-      "div",
-      { className: "radio-block" },
-      el(
-        "label",
-        {},
-        el("input", { type: "radio", name: "inc", value: "yes" }),
-        " Yes"
-      ),
-      el(
-        "label",
-        {},
-        el("input", { type: "radio", name: "inc", value: "no" }),
-        " No"
-      )
-    ),
-    el("button", { id: "income-next", className: "govuk-button" }, "Continue"),
-    backButton(viewStep3b)
-  );
-
-  $("#income-next").onclick = () => {
-    const sel = document.querySelector('input[name="inc"]:checked');
-    if (!sel) return alert("Please choose Yes or No");
-    if (sel.value === "yes") {
-      state.eligibilityRoute = "income";
-      return viewStep4();
-    }
-    // No to all → disqualify
-    showDisqualify(
-      "Based on your answers, your household does not currently meet the eligibility criteria."
-    );
-  };
-}
-
-
-// Step 4: Property (all fields required)
-function viewStep4() {
-  state.step = 4;
-  setProgress();
-  stepWrap.innerHTML = "";
-
-  const req = (text) => el("span", { className: "required-asterisk" }, " *");
-
-  stepWrap.append(
-    el("h2", {}, "Your Property"),
-// Heating
-    el("label", {}, "Main heating", req()),
-    el(
-      "select",
-      { id: "p-heat" },
-      ...["", "oil", "LPG", "wood-coal", "electric", "heat pump", "other"].map(v =>
-        el("option", { value: v }, v || "Choose…")
-      )
-    ),
-// Wall Type
-    el("label", {}, "Wall type", req()),
-    el(
-      "select",
-      { id: "p-walls" },
-      ...["", "cavity", "solid", "both"].map(v =>
-        el("option", { value: v }, v || "Choose…")
-      )
-    ),
-// Solar panels
-    el("label", {}, "Do you have solar panels?", req()),
-    el(
-      "select",
-      { id: "p-solar" },
-      el("option", { value: "" }, "Choose…"),
-      el("option", { value: "no" }, "No"),
-      el("option", { value: "yes" }, "Yes")
-    ),
-// Grade Listed
-    el("label", {}, "Is the property listed?", req()),
-    el(
-      "select",
-      { id: "p-listed" },
-      el("option", { value: "" }, "Choose…"),
-      el("option", { value: "no" }, "No"),
-      el("option", { value: "yes" }, "Yes"),
-      el("option", { value: "not_sure" }, "Not sure")
-    ),
-// Reason for applying
-    el("label", {}, "Main reason for reaching out", req()),
-    el("textarea", { id: "p-reason", rows: 3 }),
-
-    el("button", { id: "p-next", className: "govuk-button" }, "Continue"),
-    backButton(viewStep3)
-  );
-// Error message when required field is missed
-  document.getElementById("p-next").onclick = () => {
-    const heating = document.getElementById("p-heat").value;
-    const walls   = document.getElementById("p-walls").value;
-    const solar   = document.getElementById("p-solar").value;
-    const listed  = document.getElementById("p-listed").value;
-    const reason  = document.getElementById("p-reason").value.trim();
-
-    if (!heating) return alert("Please choose your main heating.");
-    if (!walls)   return alert("Please choose your wall type.");
-    if (!solar)   return alert("Please tell us if you have solar panels.");
-    if (!listed)  return alert("Please tell us if the property is listed.");
-    if (!reason)  return alert("Please tell us your main reason for reaching out.");
-
-    state.property = { heating, walls, solar, listed, reason };
-
-    if (solar === "yes") {
-      return showDisqualify("Properties with existing solar panels are not eligible under this scheme.");
-    }
-
-    viewStep4b();
-  };
-}
-
-// Step 4b: Measures selection
-function viewStep4b() {
-  state.step = 4;
-  setProgress();
-  stepWrap.innerHTML = "";
-
-  stepWrap.append(
-    el("h2", {}, "Measures of Interest"),
-    el("p", { className: "helper" },
-      "This scheme allows you to choose solar PV, air source and wall insulation OR solar PV and air source alone."
-    ),
-    el("p", { className: "helper" }, "Which measures are you interested in?"),
-    el(
-      "div",
-      { className: "radio-block" },
-      el("label", {},
-        el("input", { type: "radio", name: "measures", value: "air_solar" }),
-        " Air source heating and solar panels"
-      ),
-      el("label", {},
-        el("input", { type: "radio", name: "measures", value: "air_solar_wall" }),
-        " Air source heating, solar panels and wall insulation"
-      ),
-      el("label", {},
-        el("input", { type: "radio", name: "measures", value: "boiler" }),
-        " Mains gas boiler upgrade (only available to those already connected to mains gas)"
-      ),
-      el("label", { style: "font-weight:700;" },
-        el("input", { type: "radio", name: "measures", value: "none" }),
-        " None of the above"
-      )
-    ),
-    el("button", { id: "measures-next", className: "govuk-button" }, "Continue"),
-    backButton(viewStep4)
-  );
-
-  document.getElementById("measures-next").onclick = () => {
-    const sel = document.querySelector('input[name="measures"]:checked');
-    if (!sel) return alert("Please select one option");
-
-    state.measures = sel.value;
-// come back to change this message below ****
-    if (sel.value === "none") {
-      return showDisqualify(
-        "At this time, we can only help with Government approved measures. We may reach out if additional measures which may suit your home become available.",
-        true // allows opt-in
-      );
-    }
-
-    viewStep5();
-  };
-}
-    
-// Step 5: Contact
-function viewStep5() {
-  state.step = 5;
-  setProgress();
-  stepWrap.innerHTML = "";
-
-  const band = state.epc?.band || "N/A";
-
-  stepWrap.append(
-    el("h2", {}, "Contact Details"),
-    el("p", { className: "helper" }, "Please provide your details so we can confirm your eligibility."),
-    el("div", { className: "epc" }, `EPC: Band ${band}`),
-
-    // homeowner (required)
-    el("label", { "data-required": "true" }, "Are you the homeowner?"),
-    el(
-      "select",
-      { id: "q-homeowner" },
-      el("option", { value: "" }, "Please choose"),
-      el("option", { value: "yes" }, "Yes"),
-      el("option", { value: "no" }, "No")
-    ),
-
-    // name row (required)
-    el("div", { className: "row" },
-      el("div", {},
-        el("label", { "data-required": "true" }, "First name"),
-        el("input", { type: "text", id: "q-first" })
-      ),
-      el("div", {},
-        el("label", { "data-required": "true" }, "Last name"),
-        el("input", { type: "text", id: "q-last" })
-      )
-    ),
-
-    // phone + email row (required)
-    el("div", { className: "row" },
-      el("div", {},
-        el("label", { "data-required": "true" }, "Mobile"),
-        el("input", { type: "tel", id: "q-phone", placeholder: "07…" })
-      ),
-      el("div", {},
-        el("label", { "data-required": "true" }, "Email"),
-        el("input", { type: "email", id: "q-email", placeholder: "you@domain.com" })
-      )
-    ),
-
-    // commitment box with required checkbox
-    el("div", { className: "commitment-box" },
-      el("label", { "data-required": "true" },
-        el("input", { type: "checkbox", id: "q-commit" }),
-        " I'm serious... I'll answer/return your call/SMS/email! ",
-        "I know that a late/missed communication will prevent me from accessing the grant with Rural Energy in the future."
-      ),
-      el("p", { className: "note" },
-        "This is a free service, and our policy is to serve the most motivated and urgent enquiries."
-      ),
-      el("p", { className: "note" },
-        "You will receive an SMS from ",
-        el("strong", {}, "+44 7700 156797"),
-        " and an email to arrange a telephone appointment."
-      ),
-      el("p", { className: "note" },
-        "We will only ever call you from ",
-        el("strong", {}, "01228 812016"),
-        ". If you do not answer calls, emails, or SMS messages, you will not be able to work with us."
-      ),
-      el("p", { className: "note" },
-        "Our team are presently oversubscribed with new inquiries."
-      )
-    ),
-
-    el("button", { id: "btn-submit", className: "govuk-button" }, "Submit"),
-    backButton(viewStep4b)
-  );
-
-  // ✅ Submit handler with new checkbox validation
-  document.getElementById("btn-submit").onclick = async () => {
-    const homeowner = document.getElementById("q-homeowner").value;
-    const firstName = document.getElementById("q-first").value.trim();
-    const lastName  = document.getElementById("q-last").value.trim();
-    const phone     = document.getElementById("q-phone").value.trim();
-    const email     = document.getElementById("q-email").value.trim();
-    const commit    = document.getElementById("q-commit").checked;
-
-    if (!homeowner) return alert("Please select whether you are the homeowner.");
-    if (!firstName) return alert("Please enter your first name.");
-    if (!lastName)  return alert("Please enter your last name.");
-    if (!phone)     return alert("Please enter your mobile number.");
-    if (!email)     return alert("Please enter your email address.");
-    if (!commit)    return alert("Please confirm you're serious about responding to communications.");
-
-    const payload = {
-      status: "qualified",
-      postcode: state.postcode,
-      addressLabel: state.addressLabel,
-      uprn: state.uprn || null,
-      epc_found: !!state.epc?.found,
-      epc_band: state.epc?.band || null,
-      epc_score: state.epc?.score || null,
-      eligibilityRoute: state.eligibilityRoute,
-      property: state.property,
-      measures: state.measures || null,
-      homeowner,
-      firstName,
-      lastName,
-      phone,
-      email,
-      committed: true
-    };
-
-    const btn = document.getElementById("btn-submit");
-    btn.disabled = true;
-    try {
-      await j(`${apiBase}/submit`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
-      });
+    // ---------- Step 3b: Medical ----------
+    function viewStep3b() {
+      state.step = 3;
+      setProgress();
       stepWrap.innerHTML = "";
+
+      const medList = CFG.copy?.medicalList ?? [
+        "Respiratory (e.g. asthma, COPD)",
+        "Cardiovascular (e.g. heart disease)",
+        "Limited mobility",
+        "Immunosuppressed (e.g. cancer treatment, autoimmune therapy)"
+      ];
+
       stepWrap.append(
-        el("h2", {}, "Thanks!"),
-        el("p", { className: "ok" }, "We’ve received your details and will be in touch.")
+        el("h2", {}, H("medical", "Eligibility – Medical")),
+        el("p", { className: "helper" }, "Does someone in the household have any of these conditions?"),
+        el("ul", { className: "hint-list" }, ...medList.map(item => el("li", {}, item))),
+        el(
+          "div",
+          { className: "radio-block" },
+          el("label", {}, el("input", { type: "radio", name: "med", value: "yes" }), " Yes"),
+          el("label", {}, el("input", { type: "radio", name: "med", value: "no" }),  " No")
+        ),
+        el("button", { id: "medical-next", className: "govuk-button" }, "Continue"),
+        backButton(viewStep3)
       );
-    } catch (e) {
-      btn.disabled = false;
-      alert("Submit failed — please try again.");
+
+      $("#medical-next").onclick = () => {
+        const sel = document.querySelector('input[name="med"]:checked');
+        if (!sel) return alert("Please choose Yes or No");
+        if (sel.value === "yes") {
+          state.eligibilityRoute = "medical";
+          return viewStep4();
+        }
+        viewStep3c();
+      };
     }
-  };
-}
 
-  // Start
-  viewStep1();
-} // end mount
+    // ---------- Step 3c: Income ----------
+    function viewStep3c() {
+      state.step = 3;
+      setProgress();
+      stepWrap.innerHTML = "";
 
-if (document.readyState === "loading") {
-  document.addEventListener("DOMContentLoaded", mount);
-} else {
-  mount();
-}
-})(); // end IIFE
+      stepWrap.append(
+        el("h2", {}, H("income", "Eligibility – Income")),
+        el("p", { className: "helper" }, C("incomePrompt", "Is your total annual household income below £31,000?")),
+        el(
+          "div",
+          { className: "radio-block" },
+          el("label", {}, el("input", { type: "radio", name: "inc", value: "yes" }), " Yes"),
+          el("label", {}, el("input", { type: "radio", name: "inc", value: "no"  }), " No")
+        ),
+        el("button", { id: "income-next", className: "govuk-button" }, "Continue"),
+        backButton(viewStep3b)
+      );
 
+      $("#income-next").onclick = () => {
+        const sel = document.querySelector('input[name="inc"]:checked');
+        if (!sel) return alert("Please choose Yes or No");
+        if (sel.value === "yes") {
+          state.eligibilityRoute = "income";
+          return viewStep4();
+        }
+        const m = DM("noRoute") || "Based on your answers, your household does not currently meet the eligibility criteria.";
+        showDisqualify(m);
+      };
+    }
+
+    // ---------- Step 4: Property (required fields) ----------
+    function viewStep4() {
+      state.step = 4;
+      setProgress();
+      stepWrap.innerHTML = "";
+
+      const req = () => el("span", { className: "required-asterisk" }, " *");
+
+      const heatingOpts = OPT("heating", ["", "oil", "LPG", "wood-coal", "electric", "heat pump", "other"]);
+      const wallOpts    = OPT("walls",   ["", "cavity", "solid", "both"]);
+
+      stepWrap.append(
+        el("h2", {}, H("property", "Your Property")),
+
+        el("label", {}, "Main heating", req()),
+        el("select", { id: "p-heat" }, ...heatingOpts.map(v => el("option", { value: v }, v || "Choose…"))),
+
+        el("label", {}, "Wall type", req()),
+        el("select", { id: "p-walls" }, ...wallOpts.map(v => el("option", { value: v }, v || "Choose…"))),
+
+        el("label", {}, "Do you have solar panels?", req()),
+        el(
+          "select",
+          { id: "p-solar" },
+          el("option", { value: ""  }, "Choose…"),
+          el("option", { value: "no" }, "No"),
+          el("option", { value: "yes"}, "Yes")
+        ),
+
+        el("label", {}, "Is the property listed?", req()),
+        el(
+          "select",
+          { id: "p-listed" },
+          el("option", { value: ""         }, "Choose…"),
+          el("option", { value: "no"        }, "No"),
+          el("option", { value: "yes"       }, "Yes"),
+          el("option", { value: "not_sure"  }, "Not sure")
+        ),
+
+        el("label", {}, "Main reason for reaching out", req()),
+        el("textarea", { id: "p-reason", rows: 3 }),
+
+        el("button", { id: "p-next", className: "govuk-button" }, "Continue"),
+        backButton(viewStep3)
+      );
+
+      $("#p-next").onclick = () => {
+        const heating = $("#p-heat").value;
+        const walls   = $("#p-walls").value;
+        const solar   = $("#p-solar").value;
+        const listed  = $("#p-listed").value;
+        const reason  = $("#p-reason").value.trim();
+
+        if (!heating) return alert("Please choose your main heating.");
+        if (!walls)   return alert("Please choose your wall type.");
+        if (!solar)   return alert("Please tell us if you have solar panels.");
+        if (!listed)  return alert("Please tell us if the property is listed.");
+        if (!reason)  return alert("Please tell us your main reason for reaching out.");
+
+        state.property = { heating, walls, solar, listed, reason };
+
+        if (solar === "yes") {
+          const m = DM("solar") || "Properties with existing solar panels are not eligible under this scheme.";
+          return showDisqualify(m);
+        }
+
+        viewStep4b();
+      };
+    }
+
+    // ---------- Step 4b: Measures ----------
+    function viewStep4b() {
+      state.step = 4;
+      setProgress();
+      stepWrap.innerHTML = "";
+
+      const measures = OPT("measures", [
+        { value: "air_solar",      label: "Air source heating and solar panels" },
+        { value: "air_solar_wall", label: "Air source heating, solar panels and wall insulation" },
+        { value: "boiler",         label: "Mains gas boiler upgrade (only available to those already connected to mains gas)" },
+        { value: "none",           label: "None of the above", emph: true }
+      ]);
+
+      stepWrap.append(
+        el("h2", {}, H("measures", "Measures of Interest")),
+        el("p", { className: "helper" }, C("measuresIntro",
+          "This scheme allows you to choose solar PV, air source and wall insulation OR solar PV and air source alone."
+        )),
+        el("p", { className: "helper" }, C("measuresPrompt", "Which measures are you interested in?")),
+        el(
+          "div",
+          { className: "radio-block" },
+          ...measures.map(opt =>
+            el(
+              "label",
+              { style: opt.emph ? "font-weight:700;" : "" },
+              el("input", { type: "radio", name: "measures", value: opt.value }),
+              ` ${opt.label}`
+            )
+          )
+        ),
+        el("button", { id: "measures-next", className: "govuk-button" }, "Continue"),
+        backButton(viewStep4)
+      );
+
+      $("#measures-next").onclick = () => {
+        const sel = document.querySelector('input[name="measures"]:checked');
+        if (!sel) return alert("Please select one option");
+
+        state.measures = sel.value;
+
+        if (sel.value === "none") {
+          const m = DM("noneMeasures") || "At this time, we can only help with Government approved measures. We may reach out if additional measures which may suit your home become available.";
+          return showDisqualify(m, true);
+        }
+
+        viewStep5();
+      };
+    }
+
+    // ---------- Step 5: Contact ----------
+    function viewStep5() {
+      state.step = 5;
+      setProgress();
+      stepWrap.innerHTML = "";
+
+      const band = state.epc?.band || "N/A";
+
+      stepWrap.append(
+        el("h2", {}, H("contact", "Contact Details")),
+        el("p",  { className: "helper" }, "Please provide your details so we can confirm your eligibility."),
+        el("div",{ className: "epc" }, `EPC: Band ${band}`),
+
+        el("label", { "data-required": "true" }, "Are you the homeowner?"),
+        el(
+          "select",
+          { id: "q-homeowner" },
+          el("option", { value: ""   }, "Please choose"),
+          el("option", { value: "yes"}, "Yes"),
+          el("option", { value: "no" }, "No")
+        ),
+
+        el("div", { className: "row" },
+          el("div", {},
+            el("label", { "data-required": "true" }, "First name"),
+            el("input", { type: "text", id: "q-first" })
+          ),
+          el("div", {},
+            el("label", { "data-required": "true" }, "Last name"),
+            el("input", { type: "text", id: "q-last" })
+          )
+        ),
+
+        el("div", { className: "row" },
+          el("div", {},
+            el("label", { "data-required": "true" }, "Mobile"),
+            el("input", { type: "tel", id: "q-phone", placeholder: "07…" })
+          ),
+          el("div", {},
+            el("label", { "data-required": "true" }, "Email"),
+            el("input", { type: "email", id: "q-email", placeholder: "you@domain.com" })
+          )
+        ),
+
+        el("div", { className: "commitment-box" },
+          el(
+            "label",
+            { "data-required": "true" },
+            el("input", { type: "checkbox", id: "q-commit" }),
+            " I'm serious... I'll answer/return your call/SMS/email! ",
+            "I know that a late/missed communication will prevent me from accessing the grant with Rural Energy in the future."
+          ),
+          ...((CFG.copy?.commitment?.notes ?? [
+            "This is a free service, and our policy is to serve the most motivated and urgent enquiries.",
+            "You will receive an SMS from +44 7700 156797 and an email to arrange a telephone appointment.",
+            "We will only ever call you from 01228 812016. If you do not answer calls, emails, or SMS messages, you will not be able to work with us.",
+            "Our team are presently oversubscribed with new inquiries."
+          ]).map(n => el("p", { className: "note" }, n)))
+        ),
+
+        el("button", { id: "btn-submit", className: "govuk-button" }, "Submit"),
+        backButton(viewStep4b)
+      );
+
+      $("#btn-submit").onclick = async () => {
+        const homeowner = $("#q-homeowner").value;
+        const firstName = $("#q-first").value.trim();
+        const lastName  = $("#q-last").value.trim();
+        const phone     = $("#q-phone").value.trim();
+        const email     = $("#q-email").value.trim();
+        const commit    = $("#q-commit").checked;
+
+        if (!homeowner) return alert("Please select whether you are the homeowner.");
+        if (!firstName) return alert("Please enter your first name.");
+        if (!lastName)  return alert("Please enter your last name.");
+        if (!phone)     return alert("Please enter your mobile number.");
+        if (!email)     return alert("Please enter your email address.");
+        if (!commit)    return alert("Please confirm you're serious about responding to communications.");
+
+        const payload = {
+          status: "qualified",
+          postcode: state.postcode,
+          addressLabel: state.addressLabel,
+          uprn: state.uprn || null,
+          epc_found: !!state.epc?.found,
+          epc_band: state.epc?.band || null,
+          epc_score: state.epc?.score || null,
+          eligibilityRoute: state.eligibilityRoute,
+          property: state.property,
+          measures: state.measures || null,
+          homeowner,
+          firstName,
+          lastName,
+          phone,
+          email,
+          committed: true
+        };
+
+        const btn = $("#btn-submit");
+        btn.disabled = true;
+        try {
+          await j(`${apiBase}/submit`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload)
+          });
+          stepWrap.innerHTML = "";
+          stepWrap.append(
+            el("h2", {}, H("thanks", "Thanks!")),
+            el("p", { className: "ok" }, "We’ve received your details and will be in touch.")
+          );
+        } catch (_) {
+          btn.disabled = false;
+          alert("Submit failed — please try again.");
+        }
+      };
+    }
+
+    // start
+    viewStep1();
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", mount);
+  } else {
+    mount();
+  }
+})();
