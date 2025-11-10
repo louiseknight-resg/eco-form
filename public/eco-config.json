@@ -51,7 +51,7 @@ window.ECO_FORM_CONFIG = {
 
   options: {
     benefits: [
-      { value: "none", label: "NONE OF THE ABOVE", emph: true },
+      { value: "none", label: "NONE OF THE BELOW", emph: true },
       { value: "uc",   label: "Universal Credit" },
       { value: "pc",   label: "Pension Credit" },
       { value: "esa",  label: "Income-related ESA" },
@@ -60,7 +60,7 @@ window.ECO_FORM_CONFIG = {
       { value: "hb",   label: "Housing Benefit" },
     ],
     heating: ["", "oil", "LPG", "wood-coal", "electric", "heat pump", "other"],
-    walls: ["", "cavity", "solid", "both"],
+    walls: ["", "cavity", "solid", "Mixed Walls", "Other"],
     measures: [
       { value: "air_solar",       label: "Air source heating and solar panels" },
       { value: "air_solar_wall",  label: "Air source heating, solar panels and wall insulation" },
