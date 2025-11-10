@@ -1,7 +1,7 @@
 // window-scoped so the host page can set/override before eco-form.js loads
 
 window.ECO_FORM_CONFIG = {
-  apiBase: null, // null = use data-api="/api" on div; or set absolute URL here
+  apiBase: apiBase: "https://eco-form.vercel.app/api"
 
   thresholds: {
     qualifyMaxScore: 60,     // <=60 qualifies
