@@ -1,14 +1,24 @@
+/* ---------------------------------------------------
+      RESG BRAND VARIABLES
+----------------------------------------------------- */
 :root {
-  --govuk-blue: #1d70b8;
-  --govuk-green: #00703c;
-  --govuk-grey: #f3f2f1;
-  --govuk-text: #0b0c0c;
+  --resg-yellow: #f9cd48;
+  --resg-navy: #15304f;
+  --resg-green: #16b75a;
+  --resg-green-hover: #13a151;
+  --resg-text: #000000;
+  --resg-grey: #eae9e6;
 }
 
+/* ---------------------------------------------------
+      GLOBAL
+----------------------------------------------------- */
 body {
-  font-family: "GDS Transport", Arial, sans-serif;
-  background: #fff;
-  color: var(--govuk-text);
+  font-family: 'DM Sans', 'Roboto', Arial, sans-serif;
+  background: var(--resg-yellow);
+  color: var(--resg-text);
+  padding: 0;
+  margin: 0;
   line-height: 1.5;
 }
 
@@ -16,134 +26,148 @@ body {
   max-width: 640px;
   margin: 0 auto;
   padding: 2rem;
+  background: var(--resg-yellow);
 }
 
+/* ---------------------------------------------------
+      HEADINGS
+----------------------------------------------------- */
 h2 {
-  font-size: 1.5rem;
-  font-weight: bold;
+  font-size: 1.6rem;
+  font-weight: 700;
   margin-bottom: 1rem;
+  color: var(--resg-text);
 }
 
+/* ---------------------------------------------------
+      LABELS
+----------------------------------------------------- */
 label {
   display: block;
-  margin: 0.75rem 0 0.25rem;
+  font-weight: 600;
+  margin: 0.75rem 0 0.3rem;
+  color: var(--resg-text);
 }
 
-/* Red asterisk for any label marked data-required="true" */
+/* Red star for required */
 label[data-required="true"]::after {
   content: " *";
-  color: #d4351c; /* GOV.UK red */
-  margin-left: 4px;
+  color: #cc0000;
 }
 
-.radio-block label {
-  display: flex;
-  align-items: center;
-  margin-bottom: 8px;
-}
-
-.radio-block input[type="radio"] {
-  margin-right: 8px;
-  margin-top: 0;
-}
-
+/* ---------------------------------------------------
+      INPUTS
+----------------------------------------------------- */
 input[type=text],
 input[type=email],
 input[type=tel],
 select,
 textarea {
   width: 100%;
-  padding: 0.5rem;
-  border: 2px solid #0b0c0c;
-  font-size: 1rem;
+  min-height: 46px;
+  border-radius: 6px;
+  border: 2px solid var(--resg-navy);
+  background: #ffffff;
+  padding: 10px 12px;
+  font-size: 16px;
+  box-sizing: border-box;
+  margin-bottom: 16px;
+  font-family: 'DM Sans', 'Roboto', Arial, sans-serif;
 }
 
-button,
-.govuk-button {
-  background: var(--govuk-blue);
-  color: white;
-  padding: 0.75rem 1.5rem;
-  border: none;
-  font-size: 1rem;
-  margin-top: 1rem;
-  cursor: pointer;
+textarea {
+  min-height: 90px;
 }
 
-button.govuk-button--secondary {
-  background: var(--govuk-grey);
-  color: var(--govuk-text);
-}
-
-button:hover {
-  opacity: 0.9;
-}
-
-.back-btn {
-  margin-top: 1rem;
-  display: inline-block;
-}
-
-.hidden {
-  display: none !important;
-}
-
-.hint-list {
-  margin: 0.5rem 0 1rem 1.25rem;
-  color: #505a5f; /* GOV.UK hint text colour */
-  font-size: 0.95rem;
-}
-.hint-list li {
-  margin: 0.25rem 0;
-}
-
-.warn {
-  color: #d4351c; /* GOV.UK red */
-  font-weight: bold;
-  margin: 0.5rem 0 0.75rem;
-}
-.hidden { display: none !important; }
-
+/* ---------------------------------------------------
+      RADIO BLOCK
+----------------------------------------------------- */
 .radio-block label {
   display: flex;
   align-items: center;
-  margin-bottom: 8px;
+  margin-bottom: 10px;
+  font-weight: 500;
 }
 
 .radio-block input[type="radio"] {
-  margin-right: 8px;
-  margin-top: 0;
+  margin-right: 10px;
 }
 
+/* ---------------------------------------------------
+      BUTTONS
+----------------------------------------------------- */
+button,
+.govuk-button {
+  background: var(--resg-green) !important;
+  color: #ffffff !important;
+  padding: 0.9rem 1.6rem;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 1rem;
+  transition: background .2s ease, transform .15s ease;
+  font-family: 'DM Sans', 'Roboto', Arial, sans-serif !important;
+}
+
+button:hover,
+.govuk-button:hover {
+  background: var(--resg-navy) !important;
+}
+
+/* Secondary button (Back) */
+button.govuk-button--secondary {
+  background: var(--resg-grey) !important;
+  color: var(--resg-text) !important;
+}
+
+/* ---------------------------------------------------
+      COMMITMENT BOX
+----------------------------------------------------- */
+.commitment-box {
+  border: 2px solid var(--resg-navy);
+  border-radius: 6px;
+  padding: 15px;
+  background: #fff4c2; /* softer yellow contrast */
+  margin-top: 1rem;
+}
+
+.commitment-box label {
+  font-weight: 700;
+  margin-bottom: 10px;
+  color: var(--resg-text);
+}
+
+.commitment-box .note {
+  font-size: 0.95rem;
+  color: #333;
+}
+
+/* ---------------------------------------------------
+      HINTS, WARNING TEXT, MISC
+----------------------------------------------------- */
 .hint-list {
   margin: 8px 0 16px;
   padding-left: 20px;
+  color: #444;
 }
 
 .hint-list li {
   margin-bottom: 4px;
 }
 
-.required-asterisk {
-  color: #d4351c; /* GOV.UK red */
-  margin-left: 4px;
+.warn {
+  color: #cc0000;
+  font-weight: bold;
+  margin: 0.5rem 0 0.75rem;
 }
 
-.commitment-box {
-  border: 2px solid #1d70b8;
-  padding: 15px;
-  border-radius: 5px;
-  background: #f3f2f1;
+.hidden {
+  display: none !important;
+}
+
+.back-btn {
   margin-top: 1rem;
-}
-.commitment-box label {
-  font-weight: 600;
-  display: block;
-  margin-bottom: 10px;
-}
-.commitment-box p {
-  margin-bottom: 0.75rem;
-}
-.commitment-box .note {
-  font-size: 0.95rem;
-  color: #505a5f;
+  display: inline-block;
 }
