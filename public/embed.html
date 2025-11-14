@@ -5,23 +5,24 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>ECO Form Embed</title>
 
-  <!-- Form styles -->
+  <!-- Your form CSS (already has DM Sans + colours etc) -->
   <link rel="stylesheet" href="/eco-form.css" />
 
   <style>
+    /* No extra space around the form in the iframe */
     html, body {
       margin: 0;
       padding: 0;
-      background: #fff;
+      background: transparent;
     }
+
     .wrap {
-      max-width: 650px;
-      margin: 24px auto;
-      padding: 0 12px;
+      max-width: 640px;
+      margin: 0 auto;
+      /* no extra top/bottom margin, eco-form.css handles padding */
     }
   </style>
 </head>
-
 <body>
   <div class="wrap">
     <div id="eco-form" data-api="/api"></div>
@@ -29,17 +30,17 @@
 
   <script src="/eco-form.js" defer></script>
 
-  <!-- Auto-resize script so iframe adjusts height dynamically -->
   <script>
     function sendHeight() {
-      // send the full document height to the parent window
-      parent.postMessage({ ecoFormHeight: document.body.scrollHeight }, "*");
+      // total height of the document inside the iframe
+      const h = document.documentElement.scrollHeight || document.body.scrollHeight;
+      parent.postMessage({ ecoFormHeight: h }, "*");
     }
 
-    // Observe any DOM or layout changes that alter the form height
+    // ResizeObserver will fire whenever the form content changes height
     new ResizeObserver(sendHeight).observe(document.body);
 
-    // Run once on initial load
+    // Also run on initial load & after any layout change just in case
     window.addEventListener("load", sendHeight);
   </script>
 </body>
