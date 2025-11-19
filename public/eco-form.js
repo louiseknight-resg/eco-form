@@ -162,7 +162,7 @@
       stepWrap.innerHTML = "";
 
       stepWrap.append(
-        el("h2", {}, H("checkProperty", "Check your property")),
+        el("h2", {}, H("checkProperty", "Check your eligbility and home energy performance certificate (EPC) here")),
         el("p", { className: "helper" }, C("postcodePrompt", "Enter your postcode and choose your address.")),
         el("label", {}, "Postcode"),
         el("input", { type: "text", id: "eco-postcode", placeholder: "e.g. CA1 2AB", value: state.postcode }),
