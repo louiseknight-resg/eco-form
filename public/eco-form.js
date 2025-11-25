@@ -101,7 +101,7 @@
       return b;
     };
 
-    // EPC chart builder (government style)
+    // EPC chart builder (government style - 4 column staircase)
     const buildEpcChart = (currentBand, currentScore, potentialBand, potentialScore) => {
       const bands = [
         { letter: 'A', range: '92+', scores: [92, 100] },
@@ -121,44 +121,25 @@
           "div",
           { className: "epc-bands" },
           ...bands.map(band => {
-            const bandEl = el(
+            // Column 3: Current arrow (if this is the current band)
+            const currentArrow = (currentBand === band.letter)
+              ? el("div", { className: "epc-arrow current" }, `Current: ${band.letter} ${currentScore || ''}`)
+              : el("span", {}); // empty cell
+
+            // Column 4: Potential arrow (if this is the potential band)
+            const potentialArrow = (potentialBand === band.letter)
+              ? el("div", { className: "epc-arrow potential" }, `Potential: ${potentialBand} ${potentialScore || ''}`)
+              : el("span", {}); // empty cell
+
+            return el(
               "div",
               { className: "epc-band" },
-              el(
-                "div",
-                { className: `epc-band-bar band-${band.letter}` },
-                `${band.letter}`
-              ),
-              el("span", { className: "epc-band-score" }, band.range)
+              el("span", { className: "epc-band-score" }, band.range),
+              el("div", { className: `epc-band-bar band-${band.letter}` }, band.letter),
+              currentArrow,
+              potentialArrow
             );
-
-            // Add arrows for current and potential ratings
-            const bar = bandEl.querySelector('.epc-band-bar');
-            if (currentBand === band.letter) {
-              bar.appendChild(el("div", { className: "epc-arrow current", title: `Current: ${currentScore}` }));
-            }
-            if (potentialBand === band.letter) {
-              bar.appendChild(el("div", { className: "epc-arrow potential", title: `Potential: ${potentialScore}` }));
-            }
-
-            return bandEl;
           })
-        ),
-        el(
-          "div",
-          { className: "epc-legend" },
-          el(
-            "div",
-            { className: "epc-legend-item" },
-            el("div", { className: "epc-legend-arrow current" }),
-            `Current (${currentBand} ${currentScore || ''})`
-          ),
-          potentialBand ? el(
-            "div",
-            { className: "epc-legend-item" },
-            el("div", { className: "epc-legend-arrow potential" }),
-            `Potential (${potentialBand} ${potentialScore || ''})`
-          ) : null
         )
       );
     };
