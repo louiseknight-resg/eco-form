@@ -179,7 +179,7 @@ button.govuk-button--secondary {
 .epc-chart {
   margin: 1.5rem 0;
   background: #ffffff;
-  border: 3px solid #000;
+  border: 2px solid #b1b4b6;
   padding: 1rem;
   max-width: 550px;
 }
@@ -200,13 +200,14 @@ button.govuk-button--secondary {
   font-weight: 700;
   font-size: 0.9rem;
   color: #000;
-  border-bottom: 2px solid #000;
+  border-bottom: 1px solid #b1b4b6;
   padding-bottom: 0.5rem;
 }
 
 .epc-header > span {
   text-align: center;
-  padding: 0 0.25rem;
+  padding: 0 0.5rem;
+  border-right: 1px solid #b1b4b6;
 }
 
 .epc-header > span:first-child {
@@ -217,10 +218,14 @@ button.govuk-button--secondary {
   text-align: left;
 }
 
+.epc-header > span:last-child {
+  border-right: none;
+}
+
 .epc-bands {
   display: flex;
   flex-direction: column;
-  gap: 3px;
+  gap: 1px;
 }
 
 .epc-band {
@@ -229,6 +234,11 @@ button.govuk-button--secondary {
   align-items: center;
   height: 48px;
   gap: 0;
+  border-bottom: 1px solid #b1b4b6;
+}
+
+.epc-band:last-child {
+  border-bottom: none;
 }
 
 /* Column 1: Score range */
@@ -240,7 +250,8 @@ button.govuk-button--secondary {
   color: #000;
   font-weight: 700;
   height: 100%;
-  background: #f0f0f0;
+  background: #f3f2f1;
+  border-right: 1px solid #b1b4b6;
 }
 
 /* Column 2: Energy rating bar (staircase) */
@@ -269,24 +280,28 @@ button.govuk-button--secondary {
 .epc-arrow-cell {
   display: flex;
   align-items: center;
-  justify-content: flex-start;
+  justify-content: center;
   height: 100%;
   background: #fff;
-  padding-left: 10px;
+  border-right: 1px solid #b1b4b6;
+}
+
+.epc-arrow-cell:last-child {
+  border-right: none;
 }
 
 .epc-arrow {
   display: flex;
   align-items: center;
   justify-content: center;
-  height: 34px;
-  padding: 0 8px 0 20px;
+  height: 32px;
+  padding: 0 10px 0 18px;
   font-weight: 700;
   font-size: 0.8rem;
   white-space: nowrap;
   position: relative;
   color: #000;
-  clip-path: polygon(15px 0, 100% 0, 100% 100%, 15px 100%, 0 50%);
+  clip-path: polygon(12px 0, 100% 0, 100% 100%, 12px 100%, 0 50%);
 }
 
 /* Arrow colors match band colors */
