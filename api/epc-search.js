@@ -134,10 +134,14 @@ function postcodestrip(pc=""){return pc.replace(/\s+/g,"");}
 function shape(rec, region) {
   const band = getField(rec, "current_energy_rating", "current-energy-rating");
   const score = getField(rec, "current_energy_efficiency", "current-energy-efficiency");
+  const potentialBand = getField(rec, "potential_energy_rating", "potential-energy-rating");
+  const potentialScore = getField(rec, "potential_energy_efficiency", "potential-energy-efficiency");
   return {
     found: !!band,
     band,
     score: typeof score === "number" ? score : (score ? Number(score) : null),
+    potentialBand,
+    potentialScore: typeof potentialScore === "number" ? potentialScore : (potentialScore ? Number(potentialScore) : null),
     lmkKey: getField(rec, "lmk_key", "lmk-key"),
     certificateDate: toISODate(getField(rec, "lodgement_date", "lodgement-date")),
     region

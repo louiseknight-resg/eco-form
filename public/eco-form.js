@@ -101,6 +101,68 @@
       return b;
     };
 
+    // EPC chart builder (government style)
+    const buildEpcChart = (currentBand, currentScore, potentialBand, potentialScore) => {
+      const bands = [
+        { letter: 'A', range: '92+', scores: [92, 100] },
+        { letter: 'B', range: '81-91', scores: [81, 91] },
+        { letter: 'C', range: '69-80', scores: [69, 80] },
+        { letter: 'D', range: '55-68', scores: [55, 68] },
+        { letter: 'E', range: '39-54', scores: [39, 54] },
+        { letter: 'F', range: '21-38', scores: [21, 38] },
+        { letter: 'G', range: '1-20', scores: [1, 20] }
+      ];
+
+      return el(
+        "div",
+        { className: "epc-chart" },
+        el("div", { className: "epc-chart-title" }, "Energy Efficiency Rating"),
+        el(
+          "div",
+          { className: "epc-bands" },
+          ...bands.map(band => {
+            const bandEl = el(
+              "div",
+              { className: "epc-band" },
+              el(
+                "div",
+                { className: `epc-band-bar band-${band.letter}` },
+                `${band.letter}`
+              ),
+              el("span", { className: "epc-band-score" }, band.range)
+            );
+
+            // Add arrows for current and potential ratings
+            const bar = bandEl.querySelector('.epc-band-bar');
+            if (currentBand === band.letter) {
+              bar.appendChild(el("div", { className: "epc-arrow current", title: `Current: ${currentScore}` }));
+            }
+            if (potentialBand === band.letter) {
+              bar.appendChild(el("div", { className: "epc-arrow potential", title: `Potential: ${potentialScore}` }));
+            }
+
+            return bandEl;
+          })
+        ),
+        el(
+          "div",
+          { className: "epc-legend" },
+          el(
+            "div",
+            { className: "epc-legend-item" },
+            el("div", { className: "epc-legend-arrow current" }),
+            `Current (${currentBand} ${currentScore || ''})`
+          ),
+          potentialBand ? el(
+            "div",
+            { className: "epc-legend-item" },
+            el("div", { className: "epc-legend-arrow potential" }),
+            `Potential (${potentialBand} ${potentialScore || ''})`
+          ) : null
+        )
+      );
+    };
+
     // disqualify (with optional opt-in)
     function showDisqualify(message, allowOptIn = true) {
       state.step = Math.min(state.step + 1, state.totalSteps);
@@ -301,11 +363,19 @@
           if (out.found) {
             const band  = out.band || "N/A";
             const score = (typeof out.score === "number") ? out.score : null;
+            const potentialBand = out.potentialBand || null;
+            const potentialScore = (typeof out.potentialScore === "number") ? out.potentialScore : null;
 
             box.append(
-              el("p", {}, "We found your certificate:"),
-              el("p", {}, "EPC rating: ", el("strong", {}, band))
+              el("p", {}, "We found your certificate:")
             );
+
+            // Show EPC chart
+            if (band && band !== "N/A") {
+              box.append(buildEpcChart(band, score, potentialBand, potentialScore));
+            } else {
+              box.append(el("p", {}, "EPC rating: ", el("strong", {}, band)));
+            }
 
             if (score != null && score > QUALIFY_MAX) {
               window.location.href = "disqualified.html";
@@ -314,7 +384,7 @@
           } else {
             box.append(
               el("p", { className: "warn" }, "No EPC found. You may still qualify."),
-              el("p", { className: "note" }, "We’ll ask a few questions to check eligibility.")
+              el("p", { className: "note" }, "We'll ask a few questions to check eligibility.")
             );
           }
 
@@ -387,9 +457,9 @@
 
       const medList = CFG.copy?.medicalList ?? [
         "Respiratory (e.g. asthma, COPD)",
-        "Cardiovascular (e.g. heart disease)",
-        "Limited mobility",
-        "Immunosuppressed (e.g. cancer treatment, autoimmune therapy)"
+        "Cardiovascular (e.g. heart disease, high blood pressure, hypertension)",
+        "Limited mobility (e.g. blue badge)",
+        "Immunosuppressed (e.g. cancer treatment)"
       ];
 
       stepWrap.append(
@@ -455,7 +525,7 @@
 
       const req = () => el("span", { className: "required-asterisk" }, " *");
 
-      const heatingOpts = OPT("heating", ["", "Oil", "LPG", "Wood-coal", "Electric", "Heat Pump", "Other"]);
+      const heatingOpts = OPT("heating", ["", "Oil", "LPG", "Wood-coal", "Electric", "Electric Storage Heaters", "Heat Pump", "Biomass", "Other"]);
       const wallOpts    = OPT("walls",   ["", "Cavity", "Solid", "Mixed Walls", "Other"]);
 
       stepWrap.append(
@@ -533,7 +603,7 @@
       stepWrap.append(
         el("h2", {}, H("measures", "Measures of Interest")),
         el("p", { className: "helper" }, C("measuresIntro",
-          "This scheme allows you to choose solar PV, air source and wall insulation OR solar PV and air source alone."
+          "This scheme allows you to choose solar PV, heating and wall insulation OR solar PV and air source alone."
         )),
         el("p", { className: "helper" }, C("measuresPrompt", "Which measures are you interested in?")),
         el(
