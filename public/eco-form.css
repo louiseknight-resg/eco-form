@@ -179,33 +179,34 @@ button.govuk-button--secondary {
 .epc-chart {
   margin: 1.5rem 0;
   background: #ffffff;
-  border: 2px solid var(--resg-navy);
-  border-radius: 8px;
+  border: 3px solid #000;
   padding: 1rem;
-  max-width: 600px;
+  max-width: 550px;
 }
 
 .epc-chart-title {
   font-weight: 700;
   margin-bottom: 1rem;
-  color: var(--resg-navy);
+  color: #000;
+  font-size: 1.1rem;
 }
 
 /* Column headers */
 .epc-header {
   display: grid;
-  grid-template-columns: 60px 1fr 130px 130px;
+  grid-template-columns: 65px 1fr 120px 120px;
   gap: 0;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.75rem;
   font-weight: 700;
-  font-size: 0.85rem;
-  color: var(--resg-navy);
+  font-size: 0.9rem;
+  color: #000;
+  border-bottom: 2px solid #000;
+  padding-bottom: 0.5rem;
 }
 
 .epc-header > span {
   text-align: center;
-  padding: 0.5rem 0.25rem;
-  border-right: 1px solid #ddd;
+  padding: 0 0.25rem;
 }
 
 .epc-header > span:first-child {
@@ -214,24 +215,19 @@ button.govuk-button--secondary {
 
 .epc-header > span:nth-child(2) {
   text-align: left;
-  padding-left: 12px;
-}
-
-.epc-header > span:last-child {
-  border-right: none;
 }
 
 .epc-bands {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 3px;
 }
 
 .epc-band {
   display: grid;
-  grid-template-columns: 60px 1fr 130px 130px;
+  grid-template-columns: 65px 1fr 120px 120px;
   align-items: center;
-  height: 50px;
+  height: 48px;
   gap: 0;
 }
 
@@ -240,11 +236,11 @@ button.govuk-button--secondary {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.85rem;
-  color: #333;
-  font-weight: 600;
-  border-right: 1px solid #ddd;
+  font-size: 0.9rem;
+  color: #000;
+  font-weight: 700;
   height: 100%;
+  background: #f0f0f0;
 }
 
 /* Column 2: Energy rating bar (staircase) */
@@ -252,19 +248,20 @@ button.govuk-button--secondary {
   height: 100%;
   display: flex;
   align-items: center;
-  padding: 0 12px;
+  padding: 0 10px;
   font-weight: 700;
-  font-size: 1.2rem;
-  color: #fff;
+  font-size: 1.3rem;
+  color: #000;
   position: relative;
+  letter-spacing: 0.5px;
 }
 
 /* Staircase widths - band colors matching UK government EPC */
-.epc-band-bar.band-A { background: #008054; width: 50%; }
-.epc-band-bar.band-B { background: #19b459; width: 60%; }
-.epc-band-bar.band-C { background: #8dce46; width: 70%; }
-.epc-band-bar.band-D { background: #ffd500; width: 80%; }
-.epc-band-bar.band-E { background: #fcaa65; width: 90%; }
+.epc-band-bar.band-A { background: #008054; width: 45%; }
+.epc-band-bar.band-B { background: #19b459; width: 55%; }
+.epc-band-bar.band-C { background: #8dce46; width: 65%; }
+.epc-band-bar.band-D { background: #ffd500; width: 75%; }
+.epc-band-bar.band-E { background: #fcaa65; width: 85%; }
 .epc-band-bar.band-F { background: #ef8023; width: 95%; }
 .epc-band-bar.band-G { background: #e9153b; width: 100%; }
 
@@ -273,35 +270,33 @@ button.govuk-button--secondary {
   display: flex;
   align-items: center;
   justify-content: center;
-  border-right: 1px solid #ddd;
   height: 100%;
-}
-
-.epc-arrow-cell:last-child {
-  border-right: none;
+  background: #fff;
 }
 
 .epc-arrow {
   display: flex;
   align-items: center;
-  height: 36px;
-  padding: 0 10px;
-  border-radius: 0 4px 4px 0;
+  justify-content: center;
+  height: 38px;
+  padding: 0 12px 0 18px;
+  border-radius: 0 3px 3px 0;
   font-weight: 700;
-  font-size: 0.8rem;
+  font-size: 0.85rem;
   white-space: nowrap;
   position: relative;
-  color: #fff;
+  color: #000;
+  min-width: 70px;
 }
 
 .epc-arrow::before {
   content: '';
   position: absolute;
-  left: -12px;
+  left: 0;
   width: 0;
   height: 0;
   border-style: solid;
-  border-width: 18px 12px 18px 0;
+  border-width: 19px 15px 19px 0;
 }
 
 /* Arrow colors match band colors */
