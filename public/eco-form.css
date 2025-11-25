@@ -269,34 +269,24 @@ button.govuk-button--secondary {
 .epc-arrow-cell {
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   height: 100%;
   background: #fff;
+  padding-left: 10px;
 }
 
 .epc-arrow {
   display: flex;
   align-items: center;
   justify-content: center;
-  height: 38px;
-  padding: 0 12px 0 18px;
-  border-radius: 0 3px 3px 0;
+  height: 34px;
+  padding: 0 8px 0 20px;
   font-weight: 700;
-  font-size: 0.85rem;
+  font-size: 0.8rem;
   white-space: nowrap;
   position: relative;
   color: #000;
-  min-width: 70px;
-}
-
-.epc-arrow::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  width: 0;
-  height: 0;
-  border-style: solid;
-  border-width: 19px 15px 19px 0;
+  clip-path: polygon(15px 0, 100% 0, 100% 100%, 15px 100%, 0 50%);
 }
 
 /* Arrow colors match band colors */
