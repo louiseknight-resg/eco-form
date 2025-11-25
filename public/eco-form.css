@@ -27,6 +27,7 @@ body {
   margin: 0 auto;
   padding: 2rem;
   background: var(--resg-yellow);
+  border-radius: 12px;
 }
 
 /* ---------------------------------------------------

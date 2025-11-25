@@ -1,4 +1,4 @@
-// /public/eco-form.js - testing dev branch
+// /public/eco-form.js
 (() => {
   // ---------- tiny helpers ----------
   const $ = sel => document.querySelector(sel);
