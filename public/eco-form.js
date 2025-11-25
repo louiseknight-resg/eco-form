@@ -71,6 +71,21 @@
       answers: { homeowner: "", firstName: "", lastName: "", phone: "", email: "", consent: false }
     };
 
+    // Capture UTM tracking
+    const url = new URL(window.location.href);
+
+    state.utm = {
+      source: url.searchParams.get("utm_source") || null,
+      medium: url.searchParams.get("utm_medium") || null,
+      campaign: url.searchParams.get("utm_campaign") || null,
+      term: url.searchParams.get("utm_term") || null,
+      content: url.searchParams.get("utm_content") || null,
+
+      fbclid: url.searchParams.get("fbclid") || null,
+      gclid: url.searchParams.get("gclid") || null,
+      msclkid: url.searchParams.get("msclkid") || null,
+    };
+
     const setProgress = () => {
       const pct = Math.round(((state.step - 1) / (state.totalSteps - 1)) * 100);
       progress.firstChild.style.width = pct + "%";
@@ -145,7 +160,8 @@
                 epc_score: state.epc?.score || null,
                 name,
                 email,
-                phone
+                phone,
+                utm: state.utm
               })
             });
           } catch (_) {}
@@ -651,7 +667,8 @@
           lastName,
           phone,
           email,
-          committed: true
+          committed: true,
+          utm: state.utm
         };
 
         const btn = $("#btn-submit");
