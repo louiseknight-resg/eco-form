@@ -117,27 +117,40 @@
         "div",
         { className: "epc-chart" },
         el("div", { className: "epc-chart-title" }, "Energy Efficiency Rating"),
+        // Column headers
+        el(
+          "div",
+          { className: "epc-header" },
+          el("span", {}, "Score"),
+          el("span", {}, "Energy Rating"),
+          el("span", {}, "Current"),
+          el("span", {}, "Potential")
+        ),
         el(
           "div",
           { className: "epc-bands" },
           ...bands.map(band => {
             // Column 3: Current arrow (if this is the current band)
-            const currentArrow = (currentBand === band.letter)
-              ? el("div", { className: "epc-arrow current" }, `Current: ${band.letter} ${currentScore || ''}`)
-              : el("span", {}); // empty cell
+            const currentCell = (currentBand === band.letter)
+              ? el("div", { className: "epc-arrow-cell" },
+                  el("div", { className: `epc-arrow band-${band.letter}` }, `${band.letter} ${currentScore || ''}`)
+                )
+              : el("div", { className: "epc-arrow-cell" }); // empty cell
 
             // Column 4: Potential arrow (if this is the potential band)
-            const potentialArrow = (potentialBand === band.letter)
-              ? el("div", { className: "epc-arrow potential" }, `Potential: ${potentialBand} ${potentialScore || ''}`)
-              : el("span", {}); // empty cell
+            const potentialCell = (potentialBand === band.letter)
+              ? el("div", { className: "epc-arrow-cell" },
+                  el("div", { className: `epc-arrow band-${potentialBand}` }, `${potentialBand} ${potentialScore || ''}`)
+                )
+              : el("div", { className: "epc-arrow-cell" }); // empty cell
 
             return el(
               "div",
               { className: "epc-band" },
               el("span", { className: "epc-band-score" }, band.range),
               el("div", { className: `epc-band-bar band-${band.letter}` }, band.letter),
-              currentArrow,
-              potentialArrow
+              currentCell,
+              potentialCell
             );
           })
         )

@@ -190,6 +190,30 @@ button.govuk-button--secondary {
   color: var(--resg-navy);
 }
 
+/* Column headers */
+.epc-header {
+  display: grid;
+  grid-template-columns: 70px 1fr 150px 150px;
+  gap: 5px;
+  margin-bottom: 0.5rem;
+  font-weight: 700;
+  font-size: 0.85rem;
+  color: var(--resg-navy);
+}
+
+.epc-header > span {
+  text-align: center;
+}
+
+.epc-header > span:first-child {
+  text-align: center;
+}
+
+.epc-header > span:nth-child(2) {
+  text-align: left;
+  padding-left: 12px;
+}
+
 .epc-bands {
   display: flex;
   flex-direction: column;
@@ -222,20 +246,26 @@ button.govuk-button--secondary {
   padding: 0 12px;
   font-weight: 700;
   font-size: 1.2rem;
-  color: #000;
+  color: #fff;
   position: relative;
 }
 
 /* Staircase widths - band colors matching UK government EPC */
-.epc-band-bar.band-A { background: #008054; color: #fff; width: 50%; }
-.epc-band-bar.band-B { background: #19b459; color: #fff; width: 60%; }
-.epc-band-bar.band-C { background: #8dce46; color: #000; width: 70%; }
-.epc-band-bar.band-D { background: #ffd500; color: #000; width: 80%; }
-.epc-band-bar.band-E { background: #fcaa65; color: #000; width: 90%; }
-.epc-band-bar.band-F { background: #ef8023; color: #fff; width: 95%; }
-.epc-band-bar.band-G { background: #e9153b; color: #fff; width: 100%; }
+.epc-band-bar.band-A { background: #008054; width: 50%; }
+.epc-band-bar.band-B { background: #19b459; width: 60%; }
+.epc-band-bar.band-C { background: #8dce46; width: 70%; }
+.epc-band-bar.band-D { background: #ffd500; width: 80%; }
+.epc-band-bar.band-E { background: #fcaa65; width: 90%; }
+.epc-band-bar.band-F { background: #ef8023; width: 95%; }
+.epc-band-bar.band-G { background: #e9153b; width: 100%; }
 
 /* Columns 3 & 4: Arrow indicators */
+.epc-arrow-cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 .epc-arrow {
   display: flex;
   align-items: center;
@@ -246,6 +276,7 @@ button.govuk-button--secondary {
   font-size: 0.85rem;
   white-space: nowrap;
   position: relative;
+  color: #fff;
 }
 
 .epc-arrow::before {
@@ -258,20 +289,24 @@ button.govuk-button--secondary {
   border-width: 20px 15px 20px 0;
 }
 
-.epc-arrow.current {
-  background: var(--resg-navy);
-  color: #fff;
-}
+/* Arrow colors match band colors */
+.epc-arrow.band-A { background: #008054; }
+.epc-arrow.band-A::before { border-color: transparent #008054 transparent transparent; }
 
-.epc-arrow.current::before {
-  border-color: transparent var(--resg-navy) transparent transparent;
-}
+.epc-arrow.band-B { background: #19b459; }
+.epc-arrow.band-B::before { border-color: transparent #19b459 transparent transparent; }
 
-.epc-arrow.potential {
-  background: #666;
-  color: #fff;
-}
+.epc-arrow.band-C { background: #8dce46; }
+.epc-arrow.band-C::before { border-color: transparent #8dce46 transparent transparent; }
 
-.epc-arrow.potential::before {
-  border-color: transparent #666 transparent transparent;
-}
+.epc-arrow.band-D { background: #ffd500; }
+.epc-arrow.band-D::before { border-color: transparent #ffd500 transparent transparent; }
+
+.epc-arrow.band-E { background: #fcaa65; }
+.epc-arrow.band-E::before { border-color: transparent #fcaa65 transparent transparent; }
+
+.epc-arrow.band-F { background: #ef8023; }
+.epc-arrow.band-F::before { border-color: transparent #ef8023 transparent transparent; }
+
+.epc-arrow.band-G { background: #e9153b; }
+.epc-arrow.band-G::before { border-color: transparent #e9153b transparent transparent; }
