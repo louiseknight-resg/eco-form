@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Thank You for Your Interest</title>
+  <link rel="stylesheet" href="eco-form.css">
+  <style>
+    body {
+      background: var(--resg-yellow);
+      font-family: 'DM Sans', 'Roboto', Arial, sans-serif;
+      padding: 2rem;
+    }
+    .disqualified-container {
+      max-width: 800px;
+      margin: 0 auto;
+      background: #ffffff;
+      padding: 2rem;
+      border-radius: 12px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    .info-icon {
+      text-align: center;
+      font-size: 4rem;
+      color: var(--resg-navy);
+      margin-bottom: 1rem;
+    }
+    h1 {
+      color: var(--resg-navy);
+      text-align: center;
+      font-size: 2rem;
+      margin-bottom: 1rem;
+    }
+    .subtitle {
+      text-align: center;
+      font-size: 1.1rem;
+      color: #cc0000;
+      margin-bottom: 1.5rem;
+      font-weight: 600;
+    }
+    .content p {
+      line-height: 1.8;
+      margin-bottom: 1rem;
+      color: var(--resg-text);
+    }
+    .reasons-box {
+      background: var(--resg-grey);
+      border-radius: 8px;
+      padding: 1.5rem;
+      margin: 1.5rem 0;
+    }
+    .reasons-box h2 {
+      color: var(--resg-navy);
+      font-size: 1.2rem;
+      margin-bottom: 1rem;
+    }
+    .reasons-box ul {
+      margin-left: 1.5rem;
+      line-height: 1.8;
+    }
+    .reasons-box li {
+      margin-bottom: 0.75rem;
+    }
+    .highlight-box {
+      background: #fff4c2;
+      border: 2px solid var(--resg-navy);
+      border-radius: 8px;
+      padding: 1.5rem;
+      margin: 1.5rem 0;
+      text-align: center;
+    }
+    .highlight-box p {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+    }
+    .optin-form {
+      background: #ffffff;
+      border: 2px solid var(--resg-navy);
+      border-radius: 8px;
+      padding: 1.5rem;
+      margin: 2rem 0;
+    }
+    .optin-form h2 {
+      color: var(--resg-navy);
+      font-size: 1.3rem;
+      margin-bottom: 1rem;
+    }
+    .optin-form label {
+      display: block;
+      font-weight: 600;
+      margin-top: 1rem;
+      margin-bottom: 0.5rem;
+    }
+    .optin-form input {
+      width: 100%;
+      padding: 0.75rem;
+      border: 2px solid var(--resg-navy);
+      border-radius: 6px;
+      font-size: 1rem;
+      box-sizing: border-box;
+    }
+    .optin-form button {
+      background: var(--resg-green) !important;
+      color: #ffffff !important;
+      padding: 0.9rem 1.6rem;
+      border: none;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 1rem;
+      width: 100%;
+    }
+    .optin-form button:hover {
+      background: var(--resg-navy) !important;
+    }
+    .facebook-link {
+      text-align: center;
+      margin: 2rem 0;
+      padding: 1rem;
+      background: var(--resg-grey);
+      border-radius: 8px;
+    }
+    .facebook-link a {
+      color: var(--resg-navy);
+      font-weight: 600;
+      font-size: 1.1rem;
+    }
+    .footer {
+      text-align: center;
+      margin-top: 2rem;
+      padding-top: 1.5rem;
+      border-top: 2px solid var(--resg-grey);
+    }
+    .success-message {
+      display: none;
+      background: var(--resg-green);
+      color: white;
+      padding: 1rem;
+      border-radius: 8px;
+      text-align: center;
+      margin-top: 1rem;
+      font-weight: 600;
+    }
+  </style>
+</head>
+<body>
+  <div class="disqualified-container">
+    <div class="info-icon">✕</div>
+    <h1>We appreciate your interest</h1>
+    <p class="subtitle">Unfortunately, at this time your property doesn't qualify for this scheme.</p>
+
+    <div class="content">
+      <div class="reasons-box">
+        <h2>This can be for a variety of reasons, including:</h2>
+        <ul>
+          <li>Being connected to the mains gas supply;</li>
+          <li>Not being connected to the mains electricity supply;</li>
+          <li>Having existing solar panels (this would usually mean that the starting EPC rating is too high, and prevent the application of additional panels, which is mandatory under the scheme);</li>
+          <li>Having a listed home. Unfortunately, we are not currently accepting applications from listed buildings unless full planning permission is already in place for the list of grant measures. If this is the case for you, please email <a href="mailto:clientservices@ruralenergysavinggrants.org">clientservices@ruralenergysavinggrants.org</a> and we will see if we can assist.</li>
+          <li>Not having a qualifying applicant in your household, i.e. someone with a qualifying medical condition, benefit, or a combined household income of under £31,000 per year.</li>
+        </ul>
+      </div>
+
+      <p>We understand this might be disappointing. However, eligibility criteria for these grants can change over time, and you might become eligible in the future.</p>
+
+      <div class="highlight-box">
+        <p>The good news is, the qualification criteria for this grant will likely be opening up to more people...</p>
+        <p>We wouldn't want you to miss out on the opportunity to benefit from this service so please provide a contact email below if you'd like to be notified of any updates or newly available grants.</p>
+      </div>
+
+      <div class="optin-form">
+        <h2>Stay informed about future opportunities</h2>
+        <form id="contact-form">
+          <label for="name">Full Name</label>
+          <input type="text" id="name" name="name" required>
+
+          <label for="email">Email Address</label>
+          <input type="email" id="email" name="email" required>
+
+          <label for="phone">Phone Number (optional)</label>
+          <input type="tel" id="phone" name="phone">
+
+          <button type="submit">Keep me informed</button>
+        </form>
+        <div class="success-message" id="success-message">
+          Thank you! We'll keep you updated on future opportunities.
+        </div>
+      </div>
+
+      <div class="facebook-link">
+        <p>And why not like and follow our Facebook page to keep up to date with new grants:</p>
+        <a href="https://facebook.com/ruralenergysaving/" target="_blank">facebook.com/ruralenergysaving/</a>
+      </div>
+
+      <p style="margin-top: 2rem;">Remember, our ultimate goal is to help as many rural homeowners as possible reduce their energy costs and enjoy warm, cosy, cost efficient homes.</p>
+
+      <p><strong>We appreciate your interest and hope we'll have the chance to serve you in the future.</strong></p>
+
+      <div class="footer">
+        <p><strong>Kind regards,</strong><br>
+        Rural Energy Saving Grants</p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    document.getElementById('contact-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const formData = {
+        name: document.getElementById('name').value,
+        email: document.getElementById('email').value,
+        phone: document.getElementById('phone').value,
+        status: 'disqualified_optin'
+      };
+
+      try {
+        const response = await fetch('/api/submit', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(formData)
+        });
+
+        if (response.ok) {
+          document.getElementById('contact-form').style.display = 'none';
+          document.getElementById('success-message').style.display = 'block';
+        } else {
+          alert('There was an error submitting your information. Please try again.');
+        }
+      } catch (error) {
+        alert('There was an error submitting your information. Please try again.');
+      }
+    });
+  </script>
+</body>
+</html>

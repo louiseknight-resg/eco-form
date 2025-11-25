@@ -166,8 +166,7 @@
             });
           } catch (_) {}
         }
-        stepWrap.innerHTML = "";
-        stepWrap.append(el("h2", {}, H("thanks", "Thanks!")), el("p", { className: "note" }, "We’ll be in touch if things change."));
+        window.location.href = "disqualified.html";
       };
     }
 
@@ -309,11 +308,8 @@
             );
 
             if (score != null && score > QUALIFY_MAX) {
-              const m = DM("highScore");
-              const message = (typeof m === "function")
-                ? m(score)
-                : txt(m || "Your EPC score is {score}, which is above the qualifying threshold.", { score });
-              return showDisqualify(message);
+              window.location.href = "disqualified.html";
+              return;
             }
           } else {
             box.append(
@@ -447,8 +443,7 @@
           state.eligibilityRoute = "income";
           return viewStep4();
         }
-        const m = DM("noRoute") || "Based on your answers, your household does not currently meet the eligibility criteria.";
-        showDisqualify(m);
+        window.location.href = "disqualified.html";
       };
     }
 
@@ -514,8 +509,8 @@
         state.property = { heating, walls, solar, listed, reason };
 
         if (solar === "yes") {
-          const m = DM("solar") || "Properties with existing solar panels are not eligible under this scheme.";
-          return showDisqualify(m);
+          window.location.href = "disqualified.html";
+          return;
         }
 
         viewStep4b();
@@ -564,8 +559,8 @@
         state.measures = sel.value;
 
         if (sel.value === "none") {
-          const m = DM("noneMeasures") || "At this time, we can only help with Government approved measures. We may reach out if additional measures which may suit your home become available.";
-          return showDisqualify(m, true);
+          window.location.href = "disqualified.html";
+          return;
         }
 
         viewStep5();
@@ -679,11 +674,7 @@
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(payload)
           });
-          stepWrap.innerHTML = "";
-          stepWrap.append(
-            el("h2", {}, H("thanks", "Thanks!")),
-            el("p", { className: "ok" }, "We’ve received your details and will be in touch.")
-          );
+          window.location.href = "qualified.html";
         } catch (_) {
           btn.disabled = false;
           alert("Submit failed — please try again.");
