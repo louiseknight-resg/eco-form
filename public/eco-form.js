@@ -59,7 +59,7 @@
 
     const state = {
       step: 1,
-      totalSteps: 6, // Address → EPC → Eligibility → Property → Measures → Contact
+      totalSteps: 11, // Address → EPC → Eligibility → Heating → Walls → Homeowner → Solar → Listed → Reason → Measures → Contact
       postcode: "",
       addresses: [],
       addressLabel: "",
@@ -470,79 +470,181 @@
       };
     }
 
-    // ---------- Step 4: Property (required fields) ----------
+    // ---------- Step 4: Main Heating ----------
     function viewStep4() {
       state.step = 4;
       setProgress();
       stepWrap.innerHTML = "";
 
       const req = () => el("span", { className: "required-asterisk" }, " *");
-
       const heatingOpts = OPT("heating", ["", "Oil", "LPG", "Wood-coal", "Electric", "Heat Pump", "Biomass", "Other"]);
-      const wallOpts    = OPT("walls",   ["", "Cavity", "Solid", "Mixed Walls", "Other"]);
 
       stepWrap.append(
-        el("h2", {}, H("property", "Your Property")),
-
-        el("label", {}, "Main heating", req()),
+        el("h2", {}, "Main Heating"),
+        el("label", {}, "What is your main heating type?", req()),
         el("select", { id: "p-heat" }, ...heatingOpts.map(v => el("option", { value: v }, v || "Choose…"))),
+        el("button", { id: "heating-next", className: "govuk-button" }, "Continue"),
+        backButton(viewStep3)
+      );
 
-        el("label", {}, "Wall type", req()),
+      $("#heating-next").onclick = () => {
+        const heating = $("#p-heat").value;
+        if (!heating) return alert("Please choose your main heating.");
+        if (!state.property) state.property = {};
+        state.property.heating = heating;
+        viewStep5();
+      };
+    }
+
+    // ---------- Step 5: Wall Type ----------
+    function viewStep5() {
+      state.step = 5;
+      setProgress();
+      stepWrap.innerHTML = "";
+
+      const req = () => el("span", { className: "required-asterisk" }, " *");
+      const wallOpts = OPT("walls", ["", "Cavity", "Solid", "Mixed Walls", "Other"]);
+
+      stepWrap.append(
+        el("h2", {}, "Wall Type"),
+        el("label", {}, "What type of walls does your property have?", req()),
         el("select", { id: "p-walls" }, ...wallOpts.map(v => el("option", { value: v }, v || "Choose…"))),
+        el("button", { id: "walls-next", className: "govuk-button" }, "Continue"),
+        backButton(viewStep4)
+      );
 
+      $("#walls-next").onclick = () => {
+        const walls = $("#p-walls").value;
+        if (!walls) return alert("Please choose your wall type.");
+        state.property.walls = walls;
+        viewStep6();
+      };
+    }
+
+    // ---------- Step 6: Homeowner Status ----------
+    function viewStep6() {
+      state.step = 6;
+      setProgress();
+      stepWrap.innerHTML = "";
+
+      const req = () => el("span", { className: "required-asterisk" }, " *");
+
+      stepWrap.append(
+        el("h2", {}, "Homeowner Status"),
+        el("label", {}, "Are you the homeowner?", req()),
+        el(
+          "select",
+          { id: "p-homeowner" },
+          el("option", { value: "" }, "Choose…"),
+          el("option", { value: "yes" }, "Yes"),
+          el("option", { value: "no" }, "No")
+        ),
+        el("button", { id: "homeowner-next", className: "govuk-button" }, "Continue"),
+        backButton(viewStep5)
+      );
+
+      $("#homeowner-next").onclick = () => {
+        const homeowner = $("#p-homeowner").value;
+        if (!homeowner) return alert("Please tell us if you are the homeowner.");
+        state.property.homeowner = homeowner;
+        viewStep7();
+      };
+    }
+
+    // ---------- Step 7: Solar Panels ----------
+    function viewStep7() {
+      state.step = 7;
+      setProgress();
+      stepWrap.innerHTML = "";
+
+      const req = () => el("span", { className: "required-asterisk" }, " *");
+
+      stepWrap.append(
+        el("h2", {}, "Solar Panels"),
         el("label", {}, "Do you have solar panels?", req()),
         el(
           "select",
           { id: "p-solar" },
-          el("option", { value: ""  }, "Choose…"),
+          el("option", { value: "" }, "Choose…"),
           el("option", { value: "no" }, "No"),
-          el("option", { value: "yes"}, "Yes")
+          el("option", { value: "yes" }, "Yes")
         ),
-
-        el("label", {}, "Is the property listed?", req()),
-        el(
-          "select",
-          { id: "p-listed" },
-          el("option", { value: ""         }, "Choose…"),
-          el("option", { value: "no"        }, "No"),
-          el("option", { value: "yes"       }, "Yes"),
-          el("option", { value: "not_sure"  }, "Not sure")
-        ),
-
-        el("label", {}, "Main reason for reaching out", req()),
-        el("textarea", { id: "p-reason", rows: 3 }),
-
-        el("button", { id: "p-next", className: "govuk-button" }, "Continue"),
-        backButton(viewStep3)
+        el("button", { id: "solar-next", className: "govuk-button" }, "Continue"),
+        backButton(viewStep6)
       );
 
-      $("#p-next").onclick = () => {
-        const heating = $("#p-heat").value;
-        const walls   = $("#p-walls").value;
-        const solar   = $("#p-solar").value;
-        const listed  = $("#p-listed").value;
-        const reason  = $("#p-reason").value.trim();
-
-        if (!heating) return alert("Please choose your main heating.");
-        if (!walls)   return alert("Please choose your wall type.");
-        if (!solar)   return alert("Please tell us if you have solar panels.");
-        if (!listed)  return alert("Please tell us if the property is listed.");
-        if (!reason)  return alert("Please tell us your main reason for reaching out.");
-
-        state.property = { heating, walls, solar, listed, reason };
+      $("#solar-next").onclick = () => {
+        const solar = $("#p-solar").value;
+        if (!solar) return alert("Please tell us if you have solar panels.");
+        state.property.solar = solar;
 
         if (solar === "yes") {
           const m = DM("solar") || "Properties with existing solar panels are not eligible under this scheme.";
           return showDisqualify(m);
         }
 
-        viewStep4b();
+        viewStep8();
       };
     }
 
-    // ---------- Step 4b: Measures ----------
-    function viewStep4b() {
-      state.step = 4;
+    // ---------- Step 8: Listed Property ----------
+    function viewStep8() {
+      state.step = 8;
+      setProgress();
+      stepWrap.innerHTML = "";
+
+      const req = () => el("span", { className: "required-asterisk" }, " *");
+
+      stepWrap.append(
+        el("h2", {}, "Listed Property"),
+        el("label", {}, "Is the property listed?", req()),
+        el(
+          "select",
+          { id: "p-listed" },
+          el("option", { value: "" }, "Choose…"),
+          el("option", { value: "no" }, "No"),
+          el("option", { value: "yes" }, "Yes"),
+          el("option", { value: "not_sure" }, "Not sure")
+        ),
+        el("button", { id: "listed-next", className: "govuk-button" }, "Continue"),
+        backButton(viewStep7)
+      );
+
+      $("#listed-next").onclick = () => {
+        const listed = $("#p-listed").value;
+        if (!listed) return alert("Please tell us if the property is listed.");
+        state.property.listed = listed;
+        viewStep9();
+      };
+    }
+
+    // ---------- Step 9: Main Reason ----------
+    function viewStep9() {
+      state.step = 9;
+      setProgress();
+      stepWrap.innerHTML = "";
+
+      const req = () => el("span", { className: "required-asterisk" }, " *");
+
+      stepWrap.append(
+        el("h2", {}, "Main Reason"),
+        el("label", {}, "What is your main reason for reaching out?", req()),
+        el("textarea", { id: "p-reason", rows: 3 }),
+        el("button", { id: "reason-next", className: "govuk-button" }, "Continue"),
+        backButton(viewStep8)
+      );
+
+      $("#reason-next").onclick = () => {
+        const reason = $("#p-reason").value.trim();
+        if (!reason) return alert("Please tell us your main reason for reaching out.");
+        state.property.reason = reason;
+        viewStep10();
+      };
+    }
+
+    // ---------- Step 10: Measures ----------
+    function viewStep10() {
+      state.step = 10;
       setProgress();
       stepWrap.innerHTML = "";
 
@@ -556,7 +658,7 @@
       stepWrap.append(
         el("h2", {}, H("measures", "Measures of Interest")),
         el("p", { className: "helper" }, C("measuresIntro",
-          "This scheme allows you to choose solar PV, air source and wall insulation OR solar PV and air source alone."
+          "This scheme allows you to choose solar PV, heating and wall insulation OR solar PV and air source alone."
         )),
         el("p", { className: "helper" }, C("measuresPrompt", "Which measures are you interested in?")),
         el(
@@ -572,7 +674,7 @@
           )
         ),
         el("button", { id: "measures-next", className: "govuk-button" }, "Continue"),
-        backButton(viewStep4)
+        backButton(viewStep9)
       );
 
       $("#measures-next").onclick = () => {
@@ -586,13 +688,13 @@
           return showDisqualify(m, true);
         }
 
-        viewStep5();
+        viewStep11();
       };
     }
 
-    // ---------- Step 5: Contact ----------
-    function viewStep5() {
-      state.step = 5;
+    // ---------- Step 11: Contact ----------
+    function viewStep11() {
+      state.step = 11;
       setProgress();
       stepWrap.innerHTML = "";
 
@@ -651,7 +753,7 @@
         ),
 
         el("button", { id: "btn-submit", className: "govuk-button" }, "Submit"),
-        backButton(viewStep4b)
+        backButton(viewStep10)
       );
 
       $("#btn-submit").onclick = async () => {
