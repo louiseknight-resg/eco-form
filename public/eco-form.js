@@ -771,10 +771,14 @@
 
         if (!commit) return alert("Please confirm you're serious about responding to communications.");
 
+        // Extract first line of address (everything before the first comma)
+        const addressFirstLine = state.addressLabel ? state.addressLabel.split(',')[0].trim() : null;
+
         const payload = {
           status: "qualified",
           postcode: state.postcode,
           addressLabel: state.addressLabel,
+          addressFirstLine: addressFirstLine,
           uprn: state.uprn || null,
           epc_found: !!state.epc?.found,
           epc_band: state.epc?.band || null,
