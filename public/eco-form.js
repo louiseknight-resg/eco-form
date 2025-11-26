@@ -311,8 +311,8 @@
             if (score != null && score > QUALIFY_MAX) {
               const m = DM("highScore");
               const message = (typeof m === "function")
-                ? m(score)
-                : txt(m || "Your EPC score is {score}, which is above the qualifying threshold.", { score });
+                ? m(band, score)
+                : txt(m || "Your EPC score is {band}{score}, which is above the qualifying threshold.", { band, score });
               return showDisqualify(message);
             }
           } else {
