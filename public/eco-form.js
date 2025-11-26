@@ -477,7 +477,7 @@
       stepWrap.innerHTML = "";
 
       const req = () => el("span", { className: "required-asterisk" }, " *");
-      const heatingOpts = OPT("heating", ["", "Oil", "LPG", "Wood-coal", "Electric", "Heat Pump", "Biomass", "Other"]);
+      const heatingOpts = OPT("heating", ["", "Oil", "LPG", "Wood-coal", "Electric", "Mains Gas", "Heat Pump", "Biomass", "Other"]);
 
       stepWrap.append(
         el("h2", {}, "Main Heating"),
@@ -754,7 +754,6 @@
       stepWrap.innerHTML = "";
 
       stepWrap.append(
-        el("h2", {}, "Commitment"),
         el("div", { className: "commitment-box" },
           el(
             "label",
