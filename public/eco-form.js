@@ -308,17 +308,25 @@
               el("p", {}, "EPC rating: ", el("strong", {}, band))
             );
 
-            if (score != null && score > QUALIFY_MAX) {
-              // Get conditional message based on rating band
-              let ratingMessage = '';
-              if (['A', 'B', 'C', 'D'].includes(band)) {
-                ratingMessage = "Unfortunately your EPC rating is too high at this time to qualify. Only ratings of E or below are currently eligible. If you believe this rating is incorrect, please email clientservices@resg.uk and we'll take a closer look to see if we can help.";
-              } else if (band === 'E') {
-                ratingMessage = "E rated homes currently qualify around 50% of the time since funding limitations were introduced in August 2025. It is certainly worth completing the form and speaking with our consultants who will advise you what may be available to you.";
-              } else if (['F', 'G'].includes(band)) {
-                ratingMessage = "Your home is rated within the lowest two energy performance bands and has a high probability of securing funding at this time, provided no improvements have been made since the certificate was issued.";
-              }
+            // Get conditional message based on rating band
+            let ratingMessage = '';
+            if (['A', 'B', 'C', 'D'].includes(band)) {
+              ratingMessage = "Unfortunately your EPC rating is too high at this time to qualify. Only ratings of E or below are currently eligible. If you believe this rating is incorrect, please email clientservices@resg.uk and we'll take a closer look to see if we can help.";
+            } else if (band === 'E') {
+              ratingMessage = "E rated homes currently qualify around 50% of the time since funding limitations were introduced in August 2025. It is certainly worth completing the form and speaking with our consultants who will advise you what may be available to you.";
+            } else if (['F', 'G'].includes(band)) {
+              ratingMessage = "Your home is rated within the lowest two energy performance bands and has a high probability of securing funding at this time, provided no improvements have been made since the certificate was issued.";
+            }
 
+            // Show advice message for all ratings
+            if (ratingMessage) {
+              box.append(
+                el("p", { className: "epc-advice-text" }, ratingMessage)
+              );
+            }
+
+            // Disqualify only if score is too high (A-D ratings)
+            if (score != null && score > QUALIFY_MAX) {
               const m = DM("highScore");
               const message = (typeof m === "function")
                 ? m(band, score)
