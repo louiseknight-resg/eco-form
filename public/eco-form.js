@@ -124,15 +124,37 @@
       }
 
       const chartElements = [
-        el("div", { className: "epc-chart-title" }, "Energy Efficiency Rating"),
-        // Column headers
+        el("div", { className: "epc-chart-title" }, "Energy Efficiency Rating")
+      ];
+
+      // Add certificate date if available (above chart)
+      if (certificateDate) {
+        chartElements.push(
+          el("div", { className: "epc-certificate-date" },
+            `Certificate issued: ${new Date(certificateDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}`)
+        );
+      }
+
+      // Add advice message if available (above chart)
+      if (adviceMessage) {
+        chartElements.push(
+          el("div", { className: "epc-advice" }, adviceMessage)
+        );
+      }
+
+      // Add column headers
+      chartElements.push(
         el(
           "div",
           { className: "epc-header" },
           el("span", {}, "Score"),
           el("span", {}, "Energy Rating"),
           el("span", {}, "Current")
-        ),
+        )
+      );
+
+      // Add bands
+      chartElements.push(
         el(
           "div",
           { className: "epc-bands" },
@@ -153,22 +175,7 @@
             );
           })
         )
-      ];
-
-      // Add certificate date if available
-      if (certificateDate) {
-        chartElements.push(
-          el("div", { className: "epc-certificate-date" },
-            `Certificate issued: ${new Date(certificateDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}`)
-        );
-      }
-
-      // Add advice message if available
-      if (adviceMessage) {
-        chartElements.push(
-          el("div", { className: "epc-advice" }, adviceMessage)
-        );
-      }
+      );
 
       return el("div", { className: "epc-chart" }, ...chartElements);
     };
