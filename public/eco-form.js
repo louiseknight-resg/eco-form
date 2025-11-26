@@ -49,7 +49,7 @@
     const OPT = (k, d) => (CFG.options?.[k]        ?? d);
 
     const apiBase     = (CFG.apiBase || host.getAttribute("data-api") || "/api");
-    const QUALIFY_MAX = (CFG.thresholds?.qualifyMaxScore ?? 60);
+    const QUALIFY_MAX = (CFG.thresholds?.qualifyMaxScore ?? 54);
 
     // container + state
     host.innerHTML = "";
