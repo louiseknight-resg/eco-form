@@ -394,6 +394,7 @@
         if (!sel) return alert("Please choose an option");
         if (sel.value !== "none") {
           state.eligibilityRoute = "benefit";
+          state.benefitType = sel.value; // Store the specific benefit (uc, pc, esa, etc.)
           return viewStep4();
         }
         viewStep3b();
@@ -648,7 +649,7 @@
 
       stepWrap.append(
         el("p", { className: "helper" }, C("measuresIntro",
-          "This scheme allows you to choose solar PV, heating and wall insulation OR solar PV and air source alone."
+          "This scheme allows you to choose solar PV, air source heating and wall insulation OR solar PV and air source heating alone."
         )),
         el("p", { className: "helper" }, C("measuresPrompt", "Which measures are you interested in?")),
         el(
@@ -777,6 +778,7 @@
           epc_band: state.epc?.band || null,
           epc_score: state.epc?.score || null,
           eligibilityRoute: state.eligibilityRoute,
+          benefitType: state.benefitType || null,
           property: state.property,
           measures: state.measures || null,
           homeowner: state.property?.homeowner || null,
