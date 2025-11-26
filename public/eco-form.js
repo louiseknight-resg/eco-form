@@ -59,7 +59,7 @@
 
     const state = {
       step: 1,
-      totalSteps: 11, // Address → EPC → Eligibility → Heating → Walls → Homeowner → Solar → Listed → Reason → Measures → Contact
+      totalSteps: 12, // Address → EPC → Eligibility → Heating → Walls → Homeowner → Solar → Listed → Reason → Measures → Contact → Commitment
       postcode: "",
       addresses: [],
       addressLabel: "",
@@ -705,15 +705,6 @@
         el("p",  { className: "helper" }, "Please provide your details so we can confirm your eligibility."),
         el("div",{ className: "epc" }, `EPC: Band ${band}`),
 
-        el("label", { "data-required": "true" }, "Are you the homeowner?"),
-        el(
-          "select",
-          { id: "q-homeowner" },
-          el("option", { value: ""   }, "Please choose"),
-          el("option", { value: "yes"}, "Yes"),
-          el("option", { value: "no" }, "No")
-        ),
-
         el("div", { className: "row" },
           el("div", {},
             el("label", { "data-required": "true" }, "First name"),
@@ -736,6 +727,34 @@
           )
         ),
 
+        el("button", { id: "contact-next", className: "govuk-button" }, "Continue"),
+        backButton(viewStep10)
+      );
+
+      $("#contact-next").onclick = () => {
+        const firstName = $("#q-first").value.trim();
+        const lastName  = $("#q-last").value.trim();
+        const phone     = $("#q-phone").value.trim();
+        const email     = $("#q-email").value.trim();
+
+        if (!firstName) return alert("Please enter your first name.");
+        if (!lastName)  return alert("Please enter your last name.");
+        if (!phone)     return alert("Please enter your mobile number.");
+        if (!email)     return alert("Please enter your email address.");
+
+        state.answers = { firstName, lastName, phone, email };
+        viewStep12();
+      };
+    }
+
+    // ---------- Step 12: Commitment ----------
+    function viewStep12() {
+      state.step = 12;
+      setProgress();
+      stepWrap.innerHTML = "";
+
+      stepWrap.append(
+        el("h2", {}, "Commitment"),
         el("div", { className: "commitment-box" },
           el(
             "label",
@@ -753,23 +772,13 @@
         ),
 
         el("button", { id: "btn-submit", className: "govuk-button" }, "Submit"),
-        backButton(viewStep10)
+        backButton(viewStep11)
       );
 
       $("#btn-submit").onclick = async () => {
-        const homeowner = $("#q-homeowner").value;
-        const firstName = $("#q-first").value.trim();
-        const lastName  = $("#q-last").value.trim();
-        const phone     = $("#q-phone").value.trim();
-        const email     = $("#q-email").value.trim();
-        const commit    = $("#q-commit").checked;
+        const commit = $("#q-commit").checked;
 
-        if (!homeowner) return alert("Please select whether you are the homeowner.");
-        if (!firstName) return alert("Please enter your first name.");
-        if (!lastName)  return alert("Please enter your last name.");
-        if (!phone)     return alert("Please enter your mobile number.");
-        if (!email)     return alert("Please enter your email address.");
-        if (!commit)    return alert("Please confirm you're serious about responding to communications.");
+        if (!commit) return alert("Please confirm you're serious about responding to communications.");
 
         const payload = {
           status: "qualified",
@@ -782,11 +791,11 @@
           eligibilityRoute: state.eligibilityRoute,
           property: state.property,
           measures: state.measures || null,
-          homeowner,
-          firstName,
-          lastName,
-          phone,
-          email,
+          homeowner: state.property?.homeowner || null,
+          firstName: state.answers?.firstName,
+          lastName: state.answers?.lastName,
+          phone: state.answers?.phone,
+          email: state.answers?.email,
           committed: true,
           utm: state.utm
         };
