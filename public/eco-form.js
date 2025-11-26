@@ -372,7 +372,6 @@
       ]);
 
       stepWrap.append(
-        el("h2", {}, H("benefits", "Eligibility – Benefits")),
         el("p", { className: "helper" }, "Does someone in the household receive one of the following?"),
         el(
           "div",
@@ -415,7 +414,6 @@
       ];
 
       stepWrap.append(
-        el("h2", {}, H("medical", "Eligibility – Medical")),
         el("p", { className: "helper" }, "Does someone in the household have any of these conditions?"),
         el("ul", { className: "hint-list" }, ...medList.map(item => el("li", {}, item))),
         el(
@@ -446,7 +444,6 @@
       stepWrap.innerHTML = "";
 
       stepWrap.append(
-        el("h2", {}, H("income", "Eligibility – Income")),
         el("p", { className: "helper" }, C("incomePrompt", "Is your total annual household income below £31,000?")),
         el(
           "div",
@@ -480,7 +477,6 @@
       const heatingOpts = OPT("heating", ["", "Oil", "LPG", "Wood-coal", "Electric", "Mains Gas", "Heat Pump", "Biomass", "Other"]);
 
       stepWrap.append(
-        el("h2", {}, "Main Heating"),
         el("label", {}, "What is your main heating type?", req()),
         el("select", { id: "p-heat" }, ...heatingOpts.map(v => el("option", { value: v }, v || "Choose…"))),
         el("button", { id: "heating-next", className: "govuk-button" }, "Continue"),
@@ -506,7 +502,6 @@
       const wallOpts = OPT("walls", ["", "Cavity", "Solid", "Mixed Walls", "Other"]);
 
       stepWrap.append(
-        el("h2", {}, "Wall Type"),
         el("label", {}, "What type of walls does your property have?", req()),
         el("select", { id: "p-walls" }, ...wallOpts.map(v => el("option", { value: v }, v || "Choose…"))),
         el("button", { id: "walls-next", className: "govuk-button" }, "Continue"),
@@ -530,7 +525,6 @@
       const req = () => el("span", { className: "required-asterisk" }, " *");
 
       stepWrap.append(
-        el("h2", {}, "Homeowner Status"),
         el("label", {}, "Are you the homeowner?", req()),
         el(
           "select",
@@ -560,7 +554,6 @@
       const req = () => el("span", { className: "required-asterisk" }, " *");
 
       stepWrap.append(
-        el("h2", {}, "Solar Panels"),
         el("label", {}, "Do you have solar panels?", req()),
         el(
           "select",
@@ -596,7 +589,6 @@
       const req = () => el("span", { className: "required-asterisk" }, " *");
 
       stepWrap.append(
-        el("h2", {}, "Listed Property"),
         el("label", {}, "Is the property listed?", req()),
         el(
           "select",
@@ -627,7 +619,6 @@
       const req = () => el("span", { className: "required-asterisk" }, " *");
 
       stepWrap.append(
-        el("h2", {}, "Main Reason"),
         el("label", {}, "What is your main reason for reaching out?", req()),
         el("textarea", { id: "p-reason", rows: 3 }),
         el("button", { id: "reason-next", className: "govuk-button" }, "Continue"),
@@ -656,7 +647,6 @@
       ]);
 
       stepWrap.append(
-        el("h2", {}, H("measures", "Measures of Interest")),
         el("p", { className: "helper" }, C("measuresIntro",
           "This scheme allows you to choose solar PV, heating and wall insulation OR solar PV and air source alone."
         )),
@@ -701,7 +691,6 @@
       const band = state.epc?.band || "N/A";
 
       stepWrap.append(
-        el("h2", {}, H("contact", "Contact Details")),
         el("p",  { className: "helper" }, "Please provide your details so we can confirm your eligibility."),
         el("div",{ className: "epc" }, `EPC: Band ${band}`),
 
