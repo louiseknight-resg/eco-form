@@ -410,7 +410,7 @@
       const medList = CFG.copy?.medicalList ?? [
         "Respiratory (e.g. asthma, COPD)",
         "Cardiovascular (e.g. heart disease, hypertension, high blood pressure)",
-        "Limited mobility (e.g. blue badge",
+        "Limited mobility (e.g. blue badge)",
         "Immunosuppressed (e.g. cancer treatment)"
       ];
 
@@ -430,6 +430,7 @@
       $("#medical-next").onclick = () => {
         const sel = document.querySelector('input[name="med"]:checked');
         if (!sel) return alert("Please choose Yes or No");
+        state.medical = sel.value; // Store the medical response
         if (sel.value === "yes") {
           state.eligibilityRoute = "medical";
           return viewStep4();
@@ -459,6 +460,7 @@
       $("#income-next").onclick = () => {
         const sel = document.querySelector('input[name="inc"]:checked');
         if (!sel) return alert("Please choose Yes or No");
+        state.income = sel.value; // Store the income response
         if (sel.value === "yes") {
           state.eligibilityRoute = "income";
           return viewStep4();
@@ -786,6 +788,8 @@
           epc_property_type: state.epc?.propertyType || null,
           eligibilityRoute: state.eligibilityRoute,
           benefitType: state.benefitType || null,
+          medical: state.medical || null,
+          income: state.income || null,
           property: state.property,
           measures: state.measures || null,
           homeowner: state.property?.homeowner || null,
