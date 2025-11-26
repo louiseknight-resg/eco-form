@@ -123,9 +123,7 @@
         adviceMessage = "Your home is rated within the lowest two energy performance bands and has a high probability of securing funding at this time, provided no improvements have been made since the certificate was issued.";
       }
 
-      const chartElements = [
-        el("div", { className: "epc-chart-title" }, "Energy Efficiency Rating")
-      ];
+      const chartElements = [];
 
       // Add certificate date if available (above chart)
       if (certificateDate) {
