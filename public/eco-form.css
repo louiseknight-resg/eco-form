@@ -174,7 +174,7 @@ button.govuk-button--secondary {
 }
 
 /* ---------------------------------------------------
-      EPC CHART (Government style - 4 column staircase)
+      EPC CHART (Government style - 3 column staircase)
 ----------------------------------------------------- */
 .epc-chart {
   margin: 1.5rem 0;
@@ -194,7 +194,7 @@ button.govuk-button--secondary {
 /* Column headers */
 .epc-header {
   display: grid;
-  grid-template-columns: 65px 1fr 120px 120px;
+  grid-template-columns: 65px 1fr 120px;
   gap: 0;
   margin-bottom: 0.75rem;
   font-weight: 700;
@@ -229,7 +229,7 @@ button.govuk-button--secondary {
 
 .epc-band {
   display: grid;
-  grid-template-columns: 65px 1fr 120px 120px;
+  grid-template-columns: 65px 1fr 120px;
   align-items: center;
   height: 48px;
   gap: 0;
@@ -273,7 +273,7 @@ button.govuk-button--secondary {
 .epc-band-bar.band-F { background: #ef8023; width: 95%; }
 .epc-band-bar.band-G { background: #e9153b; width: 100%; }
 
-/* Columns 3 & 4: Arrow indicators */
+/* Column 3: Arrow indicator */
 .epc-arrow-cell {
   display: flex;
   align-items: center;
@@ -321,3 +321,24 @@ button.govuk-button--secondary {
 
 .epc-arrow.band-G { background: #e9153b; }
 .epc-arrow.band-G::before { border-color: transparent #e9153b transparent transparent; }
+
+/* Certificate date */
+.epc-certificate-date {
+  margin-top: 1rem;
+  padding-top: 0.75rem;
+  border-top: 2px solid #000;
+  font-size: 0.85rem;
+  color: #505050;
+  font-style: italic;
+}
+
+/* Advice message */
+.epc-advice {
+  margin-top: 1rem;
+  padding: 1rem;
+  background: #f0f0f0;
+  border-left: 4px solid #000;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  color: #000;
+}

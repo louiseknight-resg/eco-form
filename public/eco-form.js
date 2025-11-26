@@ -102,7 +102,7 @@
     };
 
     // EPC chart builder (government style - 4 column staircase)
-    const buildEpcChart = (currentBand, currentScore, potentialBand, potentialScore) => {
+    const buildEpcChart = (currentBand, currentScore, certificateDate) => {
       const bands = [
         { letter: 'A', range: '92+', scores: [92, 100] },
         { letter: 'B', range: '81-91', scores: [81, 91] },
@@ -113,9 +113,17 @@
         { letter: 'G', range: '1-20', scores: [1, 20] }
       ];
 
-      return el(
-        "div",
-        { className: "epc-chart" },
+      // Get advice message based on rating
+      let adviceMessage = '';
+      if (['A', 'B', 'C', 'D'].includes(currentBand)) {
+        adviceMessage = "Unfortunately your EPC rating is too high at this time to qualify. Only ratings of E or below are currently eligible. If you believe this rating is incorrect, please email clientservices@resg.uk and we'll take a closer look to see if we can help.";
+      } else if (currentBand === 'E') {
+        adviceMessage = "E rated homes currently qualify around 50% of the time since funding limitations were introduced in August 2025. It is certainly worth completing the form and speaking with our consultants who will advise you what may be available to you.";
+      } else if (['F', 'G'].includes(currentBand)) {
+        adviceMessage = "Your home is rated within the lowest two energy performance bands and has a high probability of securing funding at this time, provided no improvements have been made since the certificate was issued.";
+      }
+
+      const chartElements = [
         el("div", { className: "epc-chart-title" }, "Energy Efficiency Rating"),
         // Column headers
         el(
@@ -123,8 +131,7 @@
           { className: "epc-header" },
           el("span", {}, "Score"),
           el("span", {}, "Energy Rating"),
-          el("span", {}, "Current"),
-          el("span", {}, "Potential")
+          el("span", {}, "Current")
         ),
         el(
           "div",
@@ -137,24 +144,33 @@
                 )
               : el("div", { className: "epc-arrow-cell" }); // empty cell
 
-            // Column 4: Potential arrow (if this is the potential band)
-            const potentialCell = (potentialBand === band.letter)
-              ? el("div", { className: "epc-arrow-cell" },
-                  el("div", { className: `epc-arrow band-${potentialBand}` }, `${potentialBand} ${potentialScore || ''}`)
-                )
-              : el("div", { className: "epc-arrow-cell" }); // empty cell
-
             return el(
               "div",
               { className: "epc-band" },
               el("span", { className: "epc-band-score" }, band.range),
               el("div", { className: `epc-band-bar band-${band.letter}` }, band.letter),
-              currentCell,
-              potentialCell
+              currentCell
             );
           })
         )
-      );
+      ];
+
+      // Add certificate date if available
+      if (certificateDate) {
+        chartElements.push(
+          el("div", { className: "epc-certificate-date" },
+            `Certificate issued: ${new Date(certificateDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}`)
+        );
+      }
+
+      // Add advice message if available
+      if (adviceMessage) {
+        chartElements.push(
+          el("div", { className: "epc-advice" }, adviceMessage)
+        );
+      }
+
+      return el("div", { className: "epc-chart" }, ...chartElements);
     };
 
     // disqualify (with optional opt-in)
@@ -350,6 +366,7 @@
             })
           });
 
+          // Store all EPC data including potential ratings for GHL
           state.epc = out || { found: false };
           const box = $("#epc-box");
           box.innerHTML = "";
@@ -357,8 +374,7 @@
           if (out.found) {
             const band  = out.band || "N/A";
             const score = (typeof out.score === "number") ? out.score : null;
-            const potentialBand = out.potentialBand || null;
-            const potentialScore = (typeof out.potentialScore === "number") ? out.potentialScore : null;
+            const certificateDate = out.certificateDate || null;
 
             box.append(
               el("p", {}, "We found your certificate:")
@@ -366,7 +382,7 @@
 
             // Show EPC chart
             if (band && band !== "N/A") {
-              box.append(buildEpcChart(band, score, potentialBand, potentialScore));
+              box.append(buildEpcChart(band, score, certificateDate));
             } else {
               box.append(el("p", {}, "EPC rating: ", el("strong", {}, band)));
             }
