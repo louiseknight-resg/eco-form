@@ -30,8 +30,9 @@ export default async function handler(req) {
   // 1) CORS
   const corsHeaders = cors(req, [
     "https://eco-form.vercel.app",           // your production form
+    "https://www.resg.uk",                   // your website
+    "https://resg.uk",                       // non-www version
     // add any extra origins you use:
-    // "https://your-domain.com",
     // "http://localhost:3000",
   ]);
   if (corsHeaders instanceof Response) return corsHeaders; // OPTIONS preflight handled
