@@ -777,6 +777,13 @@
           epc_found: !!state.epc?.found,
           epc_band: state.epc?.band || null,
           epc_score: state.epc?.score || null,
+          epc_certificate_url: state.epc?.certificateUrl || null,
+          epc_certificate_date: state.epc?.certificateDate || null,
+          epc_potential: state.epc?.potentialBand && state.epc?.potentialScore
+            ? `${state.epc.potentialBand}${state.epc.potentialScore}`
+            : null,
+          epc_total_floor_area: state.epc?.totalFloorArea || null,
+          epc_property_type: state.epc?.propertyType || null,
           eligibilityRoute: state.eligibilityRoute,
           benefitType: state.benefitType || null,
           property: state.property,

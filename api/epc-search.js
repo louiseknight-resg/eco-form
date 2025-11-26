@@ -134,12 +134,21 @@ function postcodestrip(pc=""){return pc.replace(/\s+/g,"");}
 function shape(rec, region) {
   const band = getField(rec, "current_energy_rating", "current-energy-rating");
   const score = getField(rec, "current_energy_efficiency", "current-energy-efficiency");
+  const lmkKey = getField(rec, "lmk_key", "lmk-key");
+  const potentialBand = getField(rec, "potential_energy_rating", "potential-energy-rating");
+  const potentialScore = getField(rec, "potential_energy_efficiency", "potential-energy-efficiency");
+
   return {
     found: !!band,
     band,
     score: typeof score === "number" ? score : (score ? Number(score) : null),
-    lmkKey: getField(rec, "lmk_key", "lmk-key"),
+    lmkKey,
     certificateDate: toISODate(getField(rec, "lodgement_date", "lodgement-date")),
+    certificateUrl: lmkKey ? `https://find-energy-certificate.service.gov.uk/energy-certificate/${lmkKey}` : null,
+    totalFloorArea: getField(rec, "total_floor_area", "total-floor-area"),
+    potentialBand,
+    potentialScore: typeof potentialScore === "number" ? potentialScore : (potentialScore ? Number(potentialScore) : null),
+    propertyType: getField(rec, "property_type", "property-type"),
     region
   };
 }
