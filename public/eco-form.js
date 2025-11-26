@@ -391,9 +391,9 @@
 
       const medList = CFG.copy?.medicalList ?? [
         "Respiratory (e.g. asthma, COPD)",
-        "Cardiovascular (e.g. heart disease)",
-        "Limited mobility",
-        "Immunosuppressed (e.g. cancer treatment, autoimmune therapy)"
+        "Cardiovascular (e.g. heart disease, hypertension, high blood pressure)",
+        "Limited mobility (e.g. blue badge",
+        "Immunosuppressed (e.g. cancer treatment)"
       ];
 
       stepWrap.append(
@@ -460,7 +460,7 @@
 
       const req = () => el("span", { className: "required-asterisk" }, " *");
 
-      const heatingOpts = OPT("heating", ["", "Oil", "LPG", "Wood-coal", "Electric", "Heat Pump", "Other"]);
+      const heatingOpts = OPT("heating", ["", "Oil", "LPG", "Wood-coal", "Electric", "Heat Pump", "Biomass", "Other"]);
       const wallOpts    = OPT("walls",   ["", "Cavity", "Solid", "Mixed Walls", "Other"]);
 
       stepWrap.append(
