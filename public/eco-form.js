@@ -362,7 +362,7 @@
 
       // benefits options are config-driven; keep "none" first if emph=true
       const benefits = OPT("benefits", [
-        { value: "none", label: "NONE OF THE BELOW", emph: true },
+        { value: "none", label: "NO BENEFITS", emph: true },
         { value: "uc",   label: "Universal Credit" },
         { value: "pc",   label: "Pension Credit" },
         { value: "esa",  label: "Income-related ESA" },
