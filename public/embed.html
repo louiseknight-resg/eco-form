@@ -1,47 +1,61 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>ECO Form Embed</title>
-
-  <!-- Your form CSS (already has DM Sans + colours etc) -->
-  <link rel="stylesheet" href="/eco-form.css" />
-
-  <style>
-    /* No extra space around the form in the iframe */
-    html, body {
-      margin: 0;
-      padding: 0;
-      background: transparent;
-    }
-
-    .wrap {
-      max-width: 640px;
-      margin: 0 auto;
-      /* no extra top/bottom margin, eco-form.css handles padding */
-    }
-  </style>
-</head>
-<body>
-  <div class="wrap">
+  <head>
+    <meta charset="utf-8" />
+    <title>RESG ECO Form</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" href="/eco-form.css" />
+    <style>
+      /* no extra scrollbars/margins in the iframe */
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+        background: transparent;
+      }
+    </style>
+  </head>
+  <body>
     <div id="eco-form" data-api="/api"></div>
-  </div>
 
-  <script src="/eco-form.js" defer></script>
+    <script src="/eco-form.js"></script>
 
-  <script>
-    function sendHeight() {
-      // total height of the document inside the iframe
-      const h = document.documentElement.scrollHeight || document.body.scrollHeight;
-      parent.postMessage({ ecoFormHeight: h }, "*");
-    }
+    <script>
+      (function () {
+        function sendHeight() {
+          var h =
+            document.documentElement.scrollHeight ||
+            document.body.scrollHeight ||
+            0;
 
-    // ResizeObserver will fire whenever the form content changes height
-    new ResizeObserver(sendHeight).observe(document.body);
+          if (window.parent) {
+            window.parent.postMessage(
+              {
+                type: "ecoform-height",
+                height: h,
+              },
+              "*"
+            );
+          }
+        }
 
-    // Also run on initial load & after any layout change just in case
-    window.addEventListener("load", sendHeight);
-  </script>
-</body>
+        // initial + small delay in case fonts/layout shift
+        window.addEventListener("load", function () {
+          sendHeight();
+          setTimeout(sendHeight, 300);
+        });
+
+        // whenever the content changes size, tell the parent
+        if (window.ResizeObserver) {
+          var ro = new ResizeObserver(function () {
+            sendHeight();
+          });
+          ro.observe(document.body);
+        } else {
+          // fallback: ping occasionally
+          setInterval(sendHeight, 500);
+        }
+      })();
+    </script>
+  </body>
 </html>
