@@ -305,7 +305,13 @@
 
             box.append(
               el("p", {}, "We found your certificate:"),
-              el("p", {}, "EPC rating: ", el("strong", {}, band))
+              el("p", { className: "epc-explainer" },
+                "An Energy Performance Certificate (EPC) rates your home's energy efficiency from A to G, with G being the least efficient."
+              ),
+              el("div", { className: "epc-rating-box" },
+                el("div", { className: "epc-rating-label" }, "Your EPC Rating"),
+                el("div", { className: "epc-rating-band" }, band)
+              )
             );
 
             // Get conditional message based on rating band

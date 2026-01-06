@@ -191,3 +191,36 @@ button.govuk-button--secondary {
   margin-top: 1rem;
   display: inline-block;
 }
+
+/* ---------------------------------------------------
+      EPC RATING DISPLAY
+----------------------------------------------------- */
+.epc-explainer {
+  font-size: 0.95rem;
+  color: #444;
+  margin: 0.5rem 0 1rem;
+  line-height: 1.5;
+}
+
+.epc-rating-box {
+  border: 3px solid var(--resg-navy);
+  border-radius: 8px;
+  padding: 1.5rem;
+  background: #ffffff;
+  margin: 1rem 0;
+  text-align: center;
+}
+
+.epc-rating-label {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--resg-navy);
+  margin-bottom: 0.5rem;
+}
+
+.epc-rating-band {
+  font-size: 3rem;
+  font-weight: 700;
+  color: var(--resg-navy);
+  letter-spacing: 0.05em;
+}
