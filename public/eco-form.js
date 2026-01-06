@@ -258,9 +258,10 @@
                 ),
                 el("ul", { className: "hint-list" },
                   el("li", {}, "You are the owner-occupier of the property"),
-                  el("li", {}, "The property is under 100 square metres")
+                  el("li", {}, "The property is under 100 square metres"),
+                  el("li", {}, "The construction type is solid wall")
                 ),
-                el("p", { className: "note" }, "If both of these apply to you, please continue with the application.")
+                el("p", { className: "note" }, "If all of these apply to you, please continue with the application.")
               );
             } else {
               // Standard rating messages for all other bands
