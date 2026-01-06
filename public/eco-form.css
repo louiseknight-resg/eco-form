@@ -15,7 +15,7 @@
 ----------------------------------------------------- */
 html, body {
   height: auto;
-  min-height: 100vh;
+  min-height: 0;
 }
 
 body {
@@ -25,8 +25,6 @@ body {
   padding: 0;
   margin: 0;
   line-height: 1.5;
-  display: flex;
-  flex-direction: column;
 }
 
 #eco-form {
@@ -35,9 +33,6 @@ body {
   padding: 2rem;
   background: var(--resg-yellow);
   border-radius: 12px;
-  flex: 0 1 auto;
-  width: 100%;
-  box-sizing: border-box;
 }
 
 /* Progress bar */
