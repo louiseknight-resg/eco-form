@@ -325,13 +325,28 @@
               );
             }
 
-            // Disqualify only if score is too high (A-D ratings)
+            // Disqualify if score is too high (A-D ratings)
             if (score != null && score > QUALIFY_MAX) {
-              const m = DM("highScore");
-              const message = (typeof m === "function")
-                ? m(band, score)
-                : (m || `Your EPC score is ${band}${score}. ${ratingMessage}`);
-              return showDisqualify(message);
+              // Special handling for D55 - show conditional eligibility message
+              if (band === 'D' && score === 55) {
+                box.append(
+                  el("p", { className: "epc-advice-text" },
+                    "D55 rated homes may be eligible under specific circumstances:"
+                  ),
+                  el("ul", { className: "hint-list" },
+                    el("li", {}, "You are the owner-occupier of the property"),
+                    el("li", {}, "The property is under 100 square metres")
+                  ),
+                  el("p", { className: "note" }, "If both of these apply to you, please continue with the application.")
+                );
+              } else {
+                // D56+ shows standard disqualifier
+                const m = DM("highScore");
+                const message = (typeof m === "function")
+                  ? m(band, score)
+                  : (m || `Your EPC score is ${band}${score}, which is above the qualifying threshold.`);
+                return showDisqualify(message);
+              }
             }
           } else {
             box.append(

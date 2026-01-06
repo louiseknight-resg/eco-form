@@ -4,7 +4,7 @@ window.ECO_FORM_CONFIG = {
   apiBase: apiBase: "https://eco-form.vercel.app/api"
 
   thresholds: {
-    qualifyMaxScore: 60,     // <=60 qualifies
+    qualifyMaxScore: 55,     // <=55 qualifies
   },
 
   copy: {
@@ -33,7 +33,7 @@ window.ECO_FORM_CONFIG = {
       "Immunosuppressed (e.g. cancer treatment, autoimmune therapy)",
     ],
     disqualifyMessages: {
-      highScore: score => `Your EPC score is ${score}, which is above the qualifying threshold (D60).`,
+      highScore: (band, score) => `Your EPC score is ${band}${score}, which is above the qualifying threshold. Unfortunately, your EPC rating is too high at this time to qualify. If you believe this rating is incorrect, please email clientservices@resg.uk and we'll take a closer look to see if we can help.`,
       solar: "Properties with existing solar panels are not eligible under this scheme.",
       noneMeasures: "At this time, we can only help with Government approved measures. We may reach out if additional measures which may suit your home become available.",
       noRoute: "Based on your answers, your household does not currently meet the eligibility criteria.",
