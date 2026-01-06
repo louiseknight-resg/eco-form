@@ -29,6 +29,7 @@
             0;
 
           if (window.parent) {
+            // Send both formats to support different parent implementations
             window.parent.postMessage(
               {
                 type: "ecoform-height",
@@ -36,14 +37,30 @@
               },
               "*"
             );
+            window.parent.postMessage(
+              {
+                ecoFormHeight: h,
+              },
+              "*"
+            );
           }
         }
 
-        // initial + small delay in case fonts/layout shift
+        // initial + multiple delays to catch fonts/layout shifts
         window.addEventListener("load", function () {
           sendHeight();
+          setTimeout(sendHeight, 100);
           setTimeout(sendHeight, 300);
+          setTimeout(sendHeight, 500);
+          setTimeout(sendHeight, 1000);
         });
+
+        // Send height immediately on DOMContentLoaded too
+        if (document.readyState === "loading") {
+          document.addEventListener("DOMContentLoaded", sendHeight);
+        } else {
+          sendHeight();
+        }
 
         // whenever the content changes size, tell the parent
         if (window.ResizeObserver) {
@@ -51,9 +68,23 @@
             sendHeight();
           });
           ro.observe(document.body);
+          ro.observe(document.documentElement);
+          // Also observe the form container
+          var formEl = document.getElementById("eco-form");
+          if (formEl) {
+            ro.observe(formEl);
+          }
         } else {
           // fallback: ping occasionally
           setInterval(sendHeight, 500);
+        }
+
+        // Also send on any mutation in the body
+        if (window.MutationObserver) {
+          var mo = new MutationObserver(function() {
+            setTimeout(sendHeight, 50);
+          });
+          mo.observe(document.body, { childList: true, subtree: true });
         }
       })();
     </script>
