@@ -862,11 +862,8 @@
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(payload)
           });
-          stepWrap.innerHTML = "";
-          stepWrap.append(
-            el("h2", {}, H("thanks", "Thanks!")),
-            el("p", { className: "ok" }, "We’ve received your details and will be in touch.")
-          );
+          // Redirect to thank you page
+          window.location.href = "/thank-you.html";
         } catch (_) {
           btn.disabled = false;
           alert("Submit failed — please try again.");
