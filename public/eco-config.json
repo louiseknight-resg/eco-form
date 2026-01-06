@@ -22,9 +22,10 @@ window.ECO_FORM_CONFIG = {
     },
     helper: {
       postcodePrompt: "Enter your postcode and choose your address.",
-      epcChecking: "We’re checking your EPC…",
+      epcChecking: "We're checking your EPC…",
       incomePrompt: "Is your total annual household income below £31,000?",
-      measuresPrompt: "Which measures are you interested in?",
+      measuresIntro: "This scheme currently has two measure options available.",
+      measuresPrompt: "Which measure are you interested in?",
     },
     medicalList: [
       "Respiratory (e.g. asthma, COPD)",
@@ -62,9 +63,8 @@ window.ECO_FORM_CONFIG = {
     heating: ["", "oil", "LPG", "wood-coal", "electric", "heat pump", "other"],
     walls: ["", "cavity", "solid", "Mixed Walls", "Other"],
     measures: [
-      { value: "air_solar",       label: "Air source heating and solar panels" },
-      { value: "air_solar_wall",  label: "Air source heating, solar panels and wall insulation" },
-      { value: "boiler",          label: "Mains gas boiler upgrade (only available to those already connected to mains gas)" },
+      { value: "air_solar",       label: "Air Source Heat Pump with Solar PV" },
+      { value: "iwi_only",        label: "Internal Wall Insulation Only" },
       { value: "none",            label: "None of the above", emph: true },
     ],
   },
