@@ -101,74 +101,10 @@
       return b;
     };
 
-    // disqualify (with optional opt-in)
-    function showDisqualify(message, allowOptIn = true) {
-      state.step = Math.min(state.step + 1, state.totalSteps);
-      setProgress();
-      stepWrap.innerHTML = "";
-      stepWrap.append(
-        el("h2", {}, H("notEligible", "Sorry, not eligible")),
-        el("p", { className: "warn" }, message)
-      );
-
-      if (!allowOptIn) return;
-
-      const optBlock = el(
-        "div",
-        { className: "optin-block" },
-        el(
-          "label",
-          {},
-          el("input", { type: "checkbox", id: "optin" }),
-          " Keep me informed if eligibility rules change"
-        ),
-        el(
-          "div",
-          { id: "optin-form", className: "hidden" },
-          el("label", {}, "First name"),
-          el("input", { type: "text", id: "optin-name" }),
-          el("label", {}, "Email"),
-          el("input", { type: "email", id: "optin-email" }),
-          el("label", {}, "Phone"),
-          el("input", { type: "tel", id: "optin-phone" })
-        ),
-        el("button", { id: "btn-finish", className: "govuk-button" }, "Finish")
-      );
-
-      stepWrap.append(optBlock);
-
-      $("#optin").onchange = () => {
-        $("#optin-form").classList.toggle("hidden", !$("#optin").checked);
-      };
-
-      $("#btn-finish").onclick = async () => {
-        if ($("#optin").checked) {
-          const name  = $("#optin-name").value.trim();
-          const email = $("#optin-email").value.trim();
-          const phone = $("#optin-phone").value.trim();
-          try {
-            await j(`${apiBase}/submit`, {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                status: "disqualified_optin",
-                postcode: state.postcode,
-                addressLabel: state.addressLabel,
-                uprn: state.uprn || null,
-                epc_found: !!state.epc?.found,
-                epc_band: state.epc?.band || null,
-                epc_score: state.epc?.score || null,
-                name,
-                email,
-                phone,
-                utm: state.utm
-              })
-            });
-          } catch (_) {}
-        }
-        stepWrap.innerHTML = "";
-        stepWrap.append(el("h2", {}, H("thanks", "Thanks!")), el("p", { className: "note" }, "We’ll be in touch if things change."));
-      };
+    // disqualify - redirect to disqualified page
+    function showDisqualify() {
+      // Redirect to disqualified page (use window.top to break out of iframe)
+      window.top.location.href = "/disqualified.html";
     }
 
     // ---------- Step 1: Address lookup (with manual fallback) ----------
