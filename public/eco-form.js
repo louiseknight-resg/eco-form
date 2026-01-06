@@ -279,7 +279,6 @@
 
       stepWrap.append(
         el("h2", {}, H("epc", "Energy Performance Certificate")),
-        el("p", { className: "helper" }, C("epcChecking", "We’re checking your EPC…")),
         el("div", { className: "epc", id: "epc-box" }, "Checking...")
       );
 
@@ -304,7 +303,6 @@
             const score = (typeof out.score === "number") ? out.score : null;
 
             box.append(
-              el("p", {}, "We found your certificate:"),
               el("p", { className: "epc-explainer" },
                 "An Energy Performance Certificate (EPC) rates your home's energy efficiency from A to G, with G being the least efficient."
               ),
