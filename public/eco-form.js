@@ -310,37 +310,37 @@
 
             // Get conditional message based on rating band
             let ratingMessage = '';
-            if (['A', 'B', 'C', 'D'].includes(band)) {
-              ratingMessage = "Unfortunately your EPC rating is too high at this time to qualify. Only ratings of E or below are currently eligible. If you believe this rating is incorrect, please email clientservices@resg.uk and we'll take a closer look to see if we can help.";
-            } else if (band === 'E') {
-              ratingMessage = "E rated homes currently qualify around 50% of the time since funding limitations were introduced in August 2025. It is certainly worth completing the form and speaking with our consultants who will advise you what may be available to you.";
-            } else if (['F', 'G'].includes(band)) {
-              ratingMessage = "Your home is rated within the lowest two energy performance bands and has a high probability of securing funding at this time, provided no improvements have been made since the certificate was issued.";
-            }
-
-            // Show advice message for all ratings
-            if (ratingMessage) {
+            // Special handling for D55 - show conditional eligibility (no ratingMessage)
+            if (band === 'D' && score === 55) {
               box.append(
-                el("p", { className: "epc-advice-text" }, ratingMessage)
+                el("p", { className: "epc-advice-text" },
+                  "D rated homes may be eligible under specific circumstances:"
+                ),
+                el("ul", { className: "hint-list" },
+                  el("li", {}, "You are the owner-occupier of the property"),
+                  el("li", {}, "The property is under 100 square metres")
+                ),
+                el("p", { className: "note" }, "If both of these apply to you, please continue with the application.")
               );
-            }
+            } else {
+              // Standard rating messages for all other bands
+              if (['A', 'B', 'C', 'D'].includes(band)) {
+                ratingMessage = "Unfortunately your EPC rating is too high at this time to qualify. Only ratings of E or below are currently eligible. If you believe this rating is incorrect, please email clientservices@resg.uk and we'll take a closer look to see if we can help.";
+              } else if (band === 'E') {
+                ratingMessage = "E rated homes currently qualify around 50% of the time since funding limitations were introduced in August 2025. It is certainly worth completing the form and speaking with our consultants who will advise you what may be available to you.";
+              } else if (['F', 'G'].includes(band)) {
+                ratingMessage = "Your home is rated within the lowest two energy performance bands and has a high probability of securing funding at this time, provided no improvements have been made since the certificate was issued.";
+              }
 
-            // Disqualify if score is too high (A-D ratings)
-            if (score != null && score > QUALIFY_MAX) {
-              // Special handling for D55 - show conditional eligibility message
-              if (band === 'D' && score === 55) {
+              // Show advice message
+              if (ratingMessage) {
                 box.append(
-                  el("p", { className: "epc-advice-text" },
-                    "D55 rated homes may be eligible under specific circumstances:"
-                  ),
-                  el("ul", { className: "hint-list" },
-                    el("li", {}, "You are the owner-occupier of the property"),
-                    el("li", {}, "The property is under 100 square metres")
-                  ),
-                  el("p", { className: "note" }, "If both of these apply to you, please continue with the application.")
+                  el("p", { className: "epc-advice-text" }, ratingMessage)
                 );
-              } else {
-                // D56+ shows standard disqualifier
+              }
+
+              // Disqualify if score is too high (A-D56+ ratings)
+              if (score != null && score > QUALIFY_MAX) {
                 const m = DM("highScore");
                 const message = (typeof m === "function")
                   ? m(band, score)
