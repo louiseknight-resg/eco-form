@@ -862,8 +862,8 @@
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(payload)
           });
-          // Redirect to thank you page
-          window.location.href = "/thank-you.html";
+          // Redirect to thank you page (use window.top to break out of iframe)
+          window.top.location.href = "/thank-you.html";
         } catch (_) {
           btn.disabled = false;
           alert("Submit failed — please try again.");
