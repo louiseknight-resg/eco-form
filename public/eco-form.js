@@ -59,14 +59,14 @@
 
     const state = {
       step: 1,
-      totalSteps: 12, // Address → EPC → Eligibility → Heating → Walls → Homeowner → Solar → Listed → Reason → Measures → Contact → Commitment
+      totalSteps: 13, // Address → EPC → Eligibility → Heating → Boiler Type → Walls → Homeowner → Solar → Listed → Reason → Measures → Contact → Commitment
       postcode: "",
       addresses: [],
       addressLabel: "",
       uprn: "",
       epc: null, // {found, band, score}
       eligibilityRoute: null, // 'benefit' | 'medical' | 'income'
-      property: { heating: "", walls: "", solar: "no", listed: "not_sure", reason: "" },
+      property: { heating: "", boilerType: "", walls: "", solar: "no", listed: "not_sure", reason: "" },
       measures: null,
       answers: { homeowner: "", firstName: "", lastName: "", phone: "", email: "", consent: false }
     };
@@ -510,6 +510,37 @@
         if (!heating) return alert("Please choose your main heating.");
         if (!state.property) state.property = {};
         state.property.heating = heating;
+        viewStep4a();
+      };
+    }
+
+    // ---------- Step 4a: Boiler Type ----------
+    function viewStep4a() {
+      state.step = 4.5;
+      setProgress();
+      stepWrap.innerHTML = "";
+
+      const req = () => el("span", { className: "required-asterisk" }, " *");
+
+      stepWrap.append(
+        el("label", {}, "What type of boiler do you have?", req()),
+        el("p", { className: "note" }, "If your boiler was installed before 2007, it is likely a non-condensing boiler."),
+        el(
+          "select",
+          { id: "p-boiler" },
+          el("option", { value: "" }, "Choose…"),
+          el("option", { value: "condensing" }, "Condensing"),
+          el("option", { value: "non-condensing" }, "Non-condensing"),
+          el("option", { value: "dont-know" }, "Don't know")
+        ),
+        el("button", { id: "boiler-next", className: "govuk-button" }, "Continue"),
+        backButton(viewStep4)
+      );
+
+      $("#boiler-next").onclick = () => {
+        const boilerType = $("#p-boiler").value;
+        if (!boilerType) return alert("Please choose your boiler type.");
+        state.property.boilerType = boilerType;
         viewStep5();
       };
     }
@@ -527,7 +558,7 @@
         el("label", {}, "What type of walls does your property have?", req()),
         el("select", { id: "p-walls" }, ...wallOpts.map(v => el("option", { value: v }, v || "Choose…"))),
         el("button", { id: "walls-next", className: "govuk-button" }, "Continue"),
-        backButton(viewStep4)
+        backButton(viewStep4a)
       );
 
       $("#walls-next").onclick = () => {
