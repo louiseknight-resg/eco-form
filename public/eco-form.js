@@ -662,17 +662,16 @@
       stepWrap.innerHTML = "";
 
       const measures = OPT("measures", [
-        { value: "air_solar",      label: "Air source heating and solar panels" },
-        { value: "air_solar_wall", label: "Air source heating, solar panels and wall insulation" },
-        { value: "boiler",         label: "Mains gas boiler upgrade (only available to those already connected to mains gas)" },
-        { value: "none",           label: "None of the above", emph: true }
+        { value: "air_solar",       label: "Air Source Heat Pump with Solar PV" },
+        { value: "iwi_only",        label: "Internal Wall Insulation Only" },
+        { value: "none",            label: "None of the above", emph: true }
       ]);
 
       stepWrap.append(
         el("p", { className: "helper" }, C("measuresIntro",
-          "This scheme allows you to choose solar PV, air source heating and wall insulation OR solar PV and air source heating alone."
+          "This scheme currently has two measure options available."
         )),
-        el("p", { className: "helper" }, C("measuresPrompt", "Which measures are you interested in?")),
+        el("p", { className: "helper" }, C("measuresPrompt", "Which measure are you interested in?")),
         el(
           "div",
           { className: "radio-block" },
