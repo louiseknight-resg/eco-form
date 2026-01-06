@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Application Status - Rural Energy Saving Grants</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --resg-yellow: #f9cd48;
+      --resg-navy: #15304f;
+      --resg-green: #16b75a;
+      --resg-text: #000000;
+      --resg-grey: #eae9e6;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'DM Sans', 'Roboto', Arial, sans-serif;
+      background: var(--resg-yellow);
+      color: var(--resg-text);
+      line-height: 1.6;
+      padding: 2rem 1rem 0 1rem;
+      margin: 0;
+      min-height: 100vh;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      background: #ffffff;
+      border-radius: 12px;
+      padding: 3rem 2rem 2rem 2rem;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    h1 {
+      color: var(--resg-navy);
+      font-size: 2.5rem;
+      font-weight: 700;
+      margin-bottom: 1.5rem;
+      text-align: center;
+    }
+
+    .intro-text {
+      text-align: center;
+      font-size: 1.1rem;
+      color: #333;
+      margin-bottom: 2rem;
+      line-height: 1.8;
+    }
+
+    .reasons-section {
+      background: var(--resg-grey);
+      padding: 2rem;
+      border-radius: 8px;
+      margin-bottom: 2rem;
+    }
+
+    .reasons-section h3 {
+      color: var(--resg-navy);
+      font-size: 1.3rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .reasons-section ul {
+      list-style: none;
+      padding-left: 0;
+    }
+
+    .reasons-section li {
+      padding: 0.8rem 0 0.8rem 2rem;
+      position: relative;
+      line-height: 1.7;
+    }
+
+    .reasons-section li:before {
+      content: "•";
+      position: absolute;
+      left: 0.5rem;
+      color: var(--resg-navy);
+      font-weight: bold;
+      font-size: 1.5rem;
+    }
+
+    .message-box {
+      background: var(--resg-navy);
+      padding: 2rem;
+      border-radius: 8px;
+      margin-bottom: 2rem;
+      color: #ffffff;
+      text-align: center;
+    }
+
+    .message-box p {
+      font-size: 1.1rem;
+      line-height: 1.8;
+      margin-bottom: 1rem;
+    }
+
+    .message-box p:last-child {
+      margin-bottom: 0;
+    }
+
+    .email-section {
+      background: var(--resg-grey);
+      padding: 2rem;
+      border-radius: 8px;
+      margin-bottom: 2rem;
+    }
+
+    .email-section p {
+      font-size: 1.05rem;
+      margin-bottom: 1.5rem;
+      line-height: 1.8;
+    }
+
+    .email-form {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .email-form input[type="email"] {
+      flex: 1;
+      min-width: 250px;
+      padding: 0.8rem;
+      border: 2px solid #ddd;
+      border-radius: 6px;
+      font-size: 1rem;
+      font-family: 'DM Sans', sans-serif;
+    }
+
+    .email-form input[type="email"]:focus {
+      outline: none;
+      border-color: var(--resg-navy);
+    }
+
+    .email-form button {
+      padding: 0.8rem 2rem;
+      background: var(--resg-navy);
+      color: #ffffff;
+      border: none;
+      border-radius: 6px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: 'DM Sans', sans-serif;
+      transition: background 0.3s ease;
+    }
+
+    .email-form button:hover {
+      background: #0f2339;
+    }
+
+    .social-section {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+
+    .social-section p {
+      font-size: 1.05rem;
+      margin-bottom: 1rem;
+      line-height: 1.8;
+    }
+
+    .social-link {
+      display: inline-block;
+      color: var(--resg-navy);
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 1.1rem;
+      padding: 0.5rem 0;
+      transition: color 0.3s ease;
+    }
+
+    .social-link:hover {
+      color: var(--resg-green);
+    }
+
+    .closing-message {
+      text-align: center;
+      font-size: 1.05rem;
+      line-height: 1.8;
+      margin-bottom: 1.5rem;
+    }
+
+    .signature {
+      text-align: center;
+      font-size: 1.05rem;
+      color: #555;
+      margin-top: 2rem;
+    }
+
+    @media (max-width: 768px) {
+      .container {
+        padding: 2rem 1rem;
+      }
+
+      h1 {
+        font-size: 2rem;
+      }
+
+      .email-form {
+        flex-direction: column;
+      }
+
+      .email-form input[type="email"] {
+        min-width: 100%;
+      }
+
+      .email-form button {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>We Appreciate Your Interest</h1>
+
+    <div class="intro-text">
+      <p>Unfortunately, at this time your property doesn't qualify for this scheme.</p>
+    </div>
+
+    <div class="reasons-section">
+      <h3>This can be for a variety of reasons, including:</h3>
+      <ul>
+        <li>Being connected to the mains gas supply</li>
+        <li>Not being connected to the mains electricity supply</li>
+        <li>Having existing solar panels (this would usually mean that the starting EPC rating is too high, and prevent the application of additional panels, which is mandatory under the scheme)</li>
+        <li>Having a listed home. Unfortunately, we are not currently accepting applications from listed buildings unless full planning permission is already in place for the list of grant measures. If this is the case for you, please email <a href="mailto:clientservices@ruralenergysavinggrants.org" style="color: var(--resg-navy); font-weight: 600;">clientservices@ruralenergysavinggrants.org</a> and we will see if we can assist</li>
+        <li>Not having a qualifying applicant in your household, i.e. someone with a qualifying medical condition, benefit, or a combined household income of under £31,000 per year</li>
+      </ul>
+    </div>
+
+    <div class="message-box">
+      <p>We understand this might be disappointing. However, eligibility criteria for these grants can change over time, and you might become eligible in the future.</p>
+      <p><strong>The good news is, the qualification criteria for this grant will likely be opening up to more people...</strong></p>
+    </div>
+
+    <div class="email-section">
+      <p>We wouldn't want you to miss out on the opportunity to benefit from this service, so please provide a contact email below if you'd like to be notified of any updates or newly available grants.</p>
+      <form class="email-form" action="#" method="POST">
+        <input type="email" name="email" placeholder="Enter your email address" required>
+        <button type="submit">Notify Me</button>
+      </form>
+    </div>
+
+    <div class="social-section">
+      <p>Why not like and follow our Facebook page to keep up to date with new grants:</p>
+      <a href="https://facebook.com/ruralenergysaving/" target="_blank" rel="noopener" class="social-link">facebook.com/ruralenergysaving/</a>
+    </div>
+
+    <div class="closing-message">
+      <p>Remember, our ultimate goal is to help as many rural homeowners as possible reduce their energy costs and enjoy warm, cosy, cost efficient homes.</p>
+      <p>We appreciate your interest and hope we'll have the chance to serve you in the future.</p>
+    </div>
+
+    <div class="signature">
+      <p><strong>Kind regards,</strong></p>
+      <p><strong>Rural Energy Saving Grants</strong></p>
+    </div>
+  </div>
+</body>
+</html>
