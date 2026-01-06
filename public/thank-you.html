@@ -43,16 +43,22 @@
 
     .trustpilot-section {
       margin: 3rem 0 0 0;
-      padding-bottom: 0;
+      padding: 0;
+      overflow: hidden;
     }
 
     .trustpilot-widget {
       margin: 0;
       padding: 0;
+      line-height: 0;
     }
 
     .trustpilot-widget:last-child {
-      margin-bottom: 0;
+      margin-bottom: -10px;
+    }
+
+    .trustpilot-widget iframe {
+      display: block;
     }
 
     h1 {
