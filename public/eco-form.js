@@ -59,14 +59,14 @@
 
     const state = {
       step: 1,
-      totalSteps: 13, // Address → EPC → Eligibility → Heating → Boiler Type → Walls → Homeowner → Solar → Listed → Reason → Measures → Contact → Commitment
+      totalSteps: 15, // Address → EPC → Building Type → Dwelling Type → Eligibility → Heating → Boiler Type → Walls → Homeowner → Solar → Listed → Reason → Measures → Contact → Commitment
       postcode: "",
       addresses: [],
       addressLabel: "",
       uprn: "",
       epc: null, // {found, band, score}
       eligibilityRoute: null, // 'benefit' | 'medical' | 'income'
-      property: { heating: "", boilerType: "", walls: "", solar: "no", listed: "not_sure", reason: "" },
+      property: { buildingType: "", dwellingType: "", heating: "", boilerType: "", walls: "", solar: "no", listed: "not_sure", reason: "" },
       measures: null,
       answers: { homeowner: "", firstName: "", lastName: "", phone: "", email: "", consent: false }
     };
@@ -306,15 +306,63 @@
           const cont = el("button", { id: "epc-continue", className: "govuk-button" }, "Continue");
           const back = backButton(viewStep1);
           stepWrap.append(cont, back);
-          cont.onclick = () => viewStep3();
+          cont.onclick = () => viewStep2a();
 
         } catch (_) {
           $("#epc-box").innerHTML = "Lookup failed. We can still proceed.";
           const cont = el("button", { id: "epc-continue", className: "govuk-button" }, "Continue");
           stepWrap.append(cont, backButton(viewStep1));
-          cont.onclick = () => viewStep3();
+          cont.onclick = () => viewStep2a();
         }
       })();
+    }
+
+    // ---------- Step 2a: Building Type ----------
+    function viewStep2a() {
+      state.step = 2.5;
+      setProgress();
+      stepWrap.innerHTML = "";
+
+      const req = () => el("span", { className: "required-asterisk" }, " *");
+      const buildingOpts = OPT("buildingType", ["", "Detached", "Semi-detached", "Mid terrace", "End terrace", "Other"]);
+
+      stepWrap.append(
+        el("label", {}, "What type of property is it?", req()),
+        el("select", { id: "p-building" }, ...buildingOpts.map(v => el("option", { value: v }, v || "Choose…"))),
+        el("button", { id: "building-next", className: "govuk-button" }, "Continue"),
+        backButton(viewStep2)
+      );
+
+      $("#building-next").onclick = () => {
+        const buildingType = $("#p-building").value;
+        if (!buildingType) return alert("Please choose your property type.");
+        state.property.buildingType = buildingType;
+        viewStep2b();
+      };
+    }
+
+    // ---------- Step 2b: Dwelling Type ----------
+    function viewStep2b() {
+      state.step = 2.75;
+      setProgress();
+      stepWrap.innerHTML = "";
+
+      const req = () => el("span", { className: "required-asterisk" }, " *");
+      const dwellingOpts = OPT("dwellingType", ["", "House", "Bungalow", "Flat", "Maisonette", "Other"]);
+
+      stepWrap.append(
+        el("label", {}, "What style of dwelling is it?", req()),
+        el("select", { id: "p-dwelling" }, ...dwellingOpts.map(v => el("option", { value: v }, v || "Choose…"))),
+        el("button", { id: "dwelling-next", className: "govuk-button" }, "Continue"),
+        backButton(viewStep2a)
+      );
+
+      $("#dwelling-next").onclick = () => {
+        const dwellingType = $("#p-dwelling").value;
+        if (!dwellingType) return alert("Please choose your dwelling type.");
+        state.property.dwellingType = dwellingType;
+        viewStep3();
+      };
     }
 
     // ---------- Step 3a: Benefits ----------
@@ -783,6 +831,8 @@
             : null,
           epc_total_floor_area: state.epc?.totalFloorArea || null,
           epc_property_type: state.epc?.propertyType || null,
+          buildingType: state.property?.buildingType || null,
+          dwellingType: state.property?.dwellingType || null,
           eligibilityRoute: state.eligibilityRoute,
           benefitType: state.benefitType || null,
           medical: state.medical || null,
