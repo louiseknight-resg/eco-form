@@ -59,7 +59,7 @@
 
     const state = {
       step: 1,
-      totalSteps: 15, // Address → EPC → Building Type → Dwelling Type → Eligibility → Heating → Boiler Type → Walls → Homeowner → Solar → Listed → Reason → Measures → Contact → Commitment
+      totalSteps: 15, // Address → EPC → Eligibility → Heating → Boiler Type → Walls → Building Type → Dwelling Type → Homeowner → Solar → Listed → Reason → Measures → Contact → Commitment
       postcode: "",
       addresses: [],
       addressLabel: "",
@@ -306,63 +306,15 @@
           const cont = el("button", { id: "epc-continue", className: "govuk-button" }, "Continue");
           const back = backButton(viewStep1);
           stepWrap.append(cont, back);
-          cont.onclick = () => viewStep2a();
+          cont.onclick = () => viewStep3();
 
         } catch (_) {
           $("#epc-box").innerHTML = "Lookup failed. We can still proceed.";
           const cont = el("button", { id: "epc-continue", className: "govuk-button" }, "Continue");
           stepWrap.append(cont, backButton(viewStep1));
-          cont.onclick = () => viewStep2a();
+          cont.onclick = () => viewStep3();
         }
       })();
-    }
-
-    // ---------- Step 2a: Building Type ----------
-    function viewStep2a() {
-      state.step = 2.5;
-      setProgress();
-      stepWrap.innerHTML = "";
-
-      const req = () => el("span", { className: "required-asterisk" }, " *");
-      const buildingOpts = OPT("buildingType", ["", "Detached", "Semi-detached", "Mid terrace", "End terrace", "Other"]);
-
-      stepWrap.append(
-        el("label", {}, "What type of property is it?", req()),
-        el("select", { id: "p-building" }, ...buildingOpts.map(v => el("option", { value: v }, v || "Choose…"))),
-        el("button", { id: "building-next", className: "govuk-button" }, "Continue"),
-        backButton(viewStep2)
-      );
-
-      $("#building-next").onclick = () => {
-        const buildingType = $("#p-building").value;
-        if (!buildingType) return alert("Please choose your property type.");
-        state.property.buildingType = buildingType;
-        viewStep2b();
-      };
-    }
-
-    // ---------- Step 2b: Dwelling Type ----------
-    function viewStep2b() {
-      state.step = 2.75;
-      setProgress();
-      stepWrap.innerHTML = "";
-
-      const req = () => el("span", { className: "required-asterisk" }, " *");
-      const dwellingOpts = OPT("dwellingType", ["", "House", "Bungalow", "Flat", "Maisonette", "Other"]);
-
-      stepWrap.append(
-        el("label", {}, "What style of dwelling is it?", req()),
-        el("select", { id: "p-dwelling" }, ...dwellingOpts.map(v => el("option", { value: v }, v || "Choose…"))),
-        el("button", { id: "dwelling-next", className: "govuk-button" }, "Continue"),
-        backButton(viewStep2a)
-      );
-
-      $("#dwelling-next").onclick = () => {
-        const dwellingType = $("#p-dwelling").value;
-        if (!dwellingType) return alert("Please choose your dwelling type.");
-        state.property.dwellingType = dwellingType;
-        viewStep3();
-      };
     }
 
     // ---------- Step 3a: Benefits ----------
@@ -557,6 +509,54 @@
         const walls = $("#p-walls").value;
         if (!walls) return alert("Please choose your wall type.");
         state.property.walls = walls;
+        viewStep5a();
+      };
+    }
+
+    // ---------- Step 5a: Building Type ----------
+    function viewStep5a() {
+      state.step = 5.5;
+      setProgress();
+      stepWrap.innerHTML = "";
+
+      const req = () => el("span", { className: "required-asterisk" }, " *");
+      const buildingOpts = OPT("buildingType", ["", "Detached", "Semi-detached", "Mid terrace", "End terrace", "Other"]);
+
+      stepWrap.append(
+        el("label", {}, "What type of property is it?", req()),
+        el("select", { id: "p-building" }, ...buildingOpts.map(v => el("option", { value: v }, v || "Choose…"))),
+        el("button", { id: "building-next", className: "govuk-button" }, "Continue"),
+        backButton(viewStep5)
+      );
+
+      $("#building-next").onclick = () => {
+        const buildingType = $("#p-building").value;
+        if (!buildingType) return alert("Please choose your property type.");
+        state.property.buildingType = buildingType;
+        viewStep5b();
+      };
+    }
+
+    // ---------- Step 5b: Dwelling Type ----------
+    function viewStep5b() {
+      state.step = 5.75;
+      setProgress();
+      stepWrap.innerHTML = "";
+
+      const req = () => el("span", { className: "required-asterisk" }, " *");
+      const dwellingOpts = OPT("dwellingType", ["", "House", "Bungalow", "Flat", "Maisonette", "Other"]);
+
+      stepWrap.append(
+        el("label", {}, "What style of dwelling is it?", req()),
+        el("select", { id: "p-dwelling" }, ...dwellingOpts.map(v => el("option", { value: v }, v || "Choose…"))),
+        el("button", { id: "dwelling-next", className: "govuk-button" }, "Continue"),
+        backButton(viewStep5a)
+      );
+
+      $("#dwelling-next").onclick = () => {
+        const dwellingType = $("#p-dwelling").value;
+        if (!dwellingType) return alert("Please choose your dwelling type.");
+        state.property.dwellingType = dwellingType;
         viewStep6();
       };
     }
@@ -579,7 +579,7 @@
           el("option", { value: "no" }, "No")
         ),
         el("button", { id: "homeowner-next", className: "govuk-button" }, "Continue"),
-        backButton(viewStep5)
+        backButton(viewStep5b)
       );
 
       $("#homeowner-next").onclick = () => {
