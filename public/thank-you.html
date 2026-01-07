@@ -179,6 +179,28 @@
     }
   </style>
 
+  <!-- UTM Tracking Capture -->
+  <script>
+  (function() {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const utmData = {};
+
+      ['utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content', 'fbclid', 'gclid', 'msclkid'].forEach(function(key) {
+        const value = params.get(key);
+        if (value) utmData[key] = value;
+      });
+
+      if (Object.keys(utmData).length > 0) {
+        localStorage.setItem('utm_tracking', JSON.stringify(utmData));
+      }
+    } catch(e) {
+      // localStorage not available
+    }
+  })();
+  </script>
+  <!-- End UTM Tracking -->
+
   <!-- VisiSmart Code - DO NOT MODIFY--><script async type='text/javascript'>window.visiopt_code=window.visiopt_code||(function(){var visi_wid=1058,visi_pid=155,visi_flicker_time=4000,visi_flicker_element='html',c=false,d=document,visi_fn={begin:function(){var a=d.getElementById('visi_flicker');if(!a){var a=d.createElement('style'),b=visi_flicker_element?visi_flicker_element+'{opacity:0!important;background:none!important;}':'',h=d.getElementsByTagName('head')[0];a.setAttribute('id','visi_flicker');a.setAttribute('type','text/css');if(a.styleSheet){a.styleSheet.cssText=b;}else{a.appendChild(d.createTextNode(b));}h.appendChild(a);}},complete:function(){c=true;var a=d.getElementById('visi_flicker');if(a){a.parentNode.removeChild(a);}},completed:function(){return c;},pack:function(a){var b=d.createElement('script');b.src=a;b.type='text/javascript';b.innerText;b.onerror=function(){visi_fn.complete();};d.getElementsByTagName('head')[0].appendChild(b);},init:function(){visi_fn.begin();setTimeout(function(){visi_fn.complete()},visi_flicker_time);this.pack('https://visiopt.com/client/js_test/test.'+visi_wid+'.'+visi_pid+'.js');return true;}};window.visiopt_code_status=visi_fn.init();return visi_fn;}());</script><!--End Of VisiSmart Code -->
 
   <!-- Meta Pixel Code -->

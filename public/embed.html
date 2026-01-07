@@ -14,6 +14,28 @@
         background: transparent;
       }
     </style>
+
+    <!-- UTM Tracking Capture -->
+    <script>
+    (function() {
+      try {
+        const params = new URLSearchParams(window.location.search);
+        const utmData = {};
+
+        ['utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content', 'fbclid', 'gclid', 'msclkid'].forEach(function(key) {
+          const value = params.get(key);
+          if (value) utmData[key] = value;
+        });
+
+        if (Object.keys(utmData).length > 0) {
+          localStorage.setItem('utm_tracking', JSON.stringify(utmData));
+        }
+      } catch(e) {
+        // localStorage not available
+      }
+    })();
+    </script>
+    <!-- End UTM Tracking -->
   </head>
   <body>
     <div id="eco-form" data-api="/api"></div>

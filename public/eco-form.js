@@ -71,19 +71,26 @@
       answers: { homeowner: "", firstName: "", lastName: "", phone: "", email: "", consent: false }
     };
 
-    // Capture UTM tracking
+    // Capture UTM tracking - first from URL, then from localStorage as fallback
     const url = new URL(window.location.href);
+    let storedUtm = {};
+    try {
+      const stored = localStorage.getItem('utm_tracking');
+      if (stored) storedUtm = JSON.parse(stored);
+    } catch(e) {
+      // localStorage not available or parsing failed
+    }
 
     state.utm = {
-      source: url.searchParams.get("utm_source") || null,
-      medium: url.searchParams.get("utm_medium") || null,
-      campaign: url.searchParams.get("utm_campaign") || null,
-      term: url.searchParams.get("utm_term") || null,
-      content: url.searchParams.get("utm_content") || null,
+      source: url.searchParams.get("utm_source") || storedUtm.utm_source || null,
+      medium: url.searchParams.get("utm_medium") || storedUtm.utm_medium || null,
+      campaign: url.searchParams.get("utm_campaign") || storedUtm.utm_campaign || null,
+      term: url.searchParams.get("utm_term") || storedUtm.utm_term || null,
+      content: url.searchParams.get("utm_content") || storedUtm.utm_content || null,
 
-      fbclid: url.searchParams.get("fbclid") || null,
-      gclid: url.searchParams.get("gclid") || null,
-      msclkid: url.searchParams.get("msclkid") || null,
+      fbclid: url.searchParams.get("fbclid") || storedUtm.fbclid || null,
+      gclid: url.searchParams.get("gclid") || storedUtm.gclid || null,
+      msclkid: url.searchParams.get("msclkid") || storedUtm.msclkid || null,
     };
 
     const setProgress = () => {
