@@ -34,6 +34,17 @@
     }
   };
 
+  // fetch council data (non-blocking, returns null on error)
+  const fetchCouncilData = async (postcode, apiBase) => {
+    try {
+      const data = await j(`${apiBase}/council-lookup?postcode=${encodeURIComponent(postcode)}`);
+      return data;
+    } catch (e) {
+      console.warn("Council lookup failed:", e);
+      return null;
+    }
+  };
+
   // ---------- app mount ----------
   async function mount() {
     const host = document.getElementById("eco-form");
@@ -65,6 +76,7 @@
       addressLabel: "",
       uprn: "",
       epc: null, // {found, band, score}
+      council: null, // {found, council, ward, constituency}
       eligibilityRoute: null, // 'benefit' | 'medical' | 'income'
       property: { buildingType: "", dwellingType: "", heating: "", boilerType: "", walls: "", solar: "no", listed: "not_sure", reason: "" },
       measures: null,
@@ -192,6 +204,12 @@
         if (!picked) return alert("Please select your address");
         state.addressLabel = picked.label;
         state.uprn        = picked.uprn || "";
+
+        // Fetch council data in background (non-blocking)
+        fetchCouncilData(state.postcode, apiBase).then(data => {
+          if (data) state.council = data;
+        });
+
         viewStep2();
       };
 
@@ -210,6 +228,12 @@
         state.addressLabel = `${line}, ${post}`;
         state.uprn         = "";
         state.postcode     = post;
+
+        // Fetch council data in background (non-blocking)
+        fetchCouncilData(post, apiBase).then(data => {
+          if (data) state.council = data;
+        });
+
         viewStep2();
       };
     }
@@ -815,6 +839,15 @@
         // Extract first line of address (everything before the first comma)
         const addressFirstLine = state.addressLabel ? state.addressLabel.split(',')[0].trim() : null;
 
+        const btn = $("#btn-submit");
+        btn.disabled = true;
+
+        // Fallback: If council data hasn't been fetched yet, try to fetch it now
+        if (!state.council && state.postcode) {
+          const councilData = await fetchCouncilData(state.postcode, apiBase);
+          if (councilData) state.council = councilData;
+        }
+
         const payload = {
           status: "qualified",
           postcode: state.postcode,
@@ -845,11 +878,11 @@
           phone: state.answers?.phone,
           email: state.answers?.email,
           committed: true,
-          utm: state.utm
+          utm: state.utm,
+          council_found: !!state.council?.found,
+          council_data: state.council || null
         };
 
-        const btn = $("#btn-submit");
-        btn.disabled = true;
         try {
           await j(`${apiBase}/submit`, {
             method: "POST",
