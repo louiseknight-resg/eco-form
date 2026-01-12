@@ -221,6 +221,19 @@
   src="https://www.facebook.com/tr?id=813917580080435&ev=PageView&noscript=1"
   /></noscript>
   <!-- End Meta Pixel Code -->
+
+  <!-- GA4 Conversion Tracking -->
+  <script>
+  console.log('Thank you page loaded - firing conversion event');
+
+  if (typeof gtag === 'function') {
+    gtag('event', 'conversion', {
+      'event_category': 'Lead Generation',
+      'event_label': 'Qualified Lead'
+    });
+  }
+  </script>
+  <!-- End GA4 Conversion Tracking -->
 </head>
 <body>
   <div class="container">
