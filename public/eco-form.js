@@ -797,6 +797,15 @@
         if (!firstName) return alert("Please enter your first name.");
         if (!lastName)  return alert("Please enter your last name.");
         if (!phone)     return alert("Please enter your mobile number.");
+
+        // Validate phone number - remove spaces and check format
+        const phoneClean = phone.replace(/\s/g, "");
+        // Accept: 07123456789 (11 digits), +447123456789 (with +44), or 447123456789 (with 44)
+        const isValid = /^(\+44|44)?7\d{9}$/.test(phoneClean) || /^07\d{9}$/.test(phoneClean);
+        if (!isValid) {
+          return alert("Please enter a valid UK mobile number (e.g., 07123456789 or +447123456789).");
+        }
+
         if (!email)     return alert("Please enter your email address.");
 
         state.answers = { firstName, lastName, phone, email };
