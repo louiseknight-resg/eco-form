@@ -568,7 +568,7 @@
       stepWrap.innerHTML = "";
 
       const req = () => el("span", { className: "required-asterisk" }, " *");
-      const dwellingOpts = OPT("dwellingType", ["", "House", "Bungalow", "Flat", "Maisonette", "Other"]);
+      const dwellingOpts = OPT("dwellingType", ["", "House", "Bungalow", "Flat", "Maisonette", "Park home", "Other"]);
 
       stepWrap.append(
         el("label", {}, "What style of dwelling is it?", req()),
