@@ -222,18 +222,22 @@
   /></noscript>
   <!-- End Meta Pixel Code -->
 
-  <!-- GA4 Conversion Tracking -->
+  <!-- Google Analytics 4 -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-GJC9MK38KE"></script>
   <script>
-  console.log('Thank you page loaded - firing conversion event');
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-GJC9MK38KE');
 
-  if (typeof gtag === 'function') {
-    gtag('event', 'conversion', {
-      'event_category': 'Lead Generation',
-      'event_label': 'Qualified Lead'
-    });
-  }
+  // Fire conversion event
+  console.log('Thank you page loaded - firing conversion event');
+  gtag('event', 'conversion', {
+    'event_category': 'Lead Generation',
+    'event_label': 'Qualified Lead'
+  });
   </script>
-  <!-- End GA4 Conversion Tracking -->
+  <!-- End Google Analytics 4 -->
 </head>
 <body>
   <div class="container">
