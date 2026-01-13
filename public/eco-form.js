@@ -899,14 +899,6 @@
             body: JSON.stringify(payload)
           });
 
-          // After successful form submission
-          if (typeof gtag === 'function') {
-            gtag('event', 'form_submission', {
-              'event_category': 'Lead Generation',
-              'event_label': 'Contact Form'
-            });
-          }
-
           // Redirect to thank you page (use window.top to break out of iframe)
           window.top.location.href = "/thank-you.html";
         } catch (_) {
