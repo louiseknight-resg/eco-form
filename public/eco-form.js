@@ -281,6 +281,7 @@
 
             // Get conditional message based on rating band
             let ratingMessage = '';
+            let isERating = false;
             // Special handling for D55 - show conditional eligibility (no ratingMessage)
             if (band === 'D' && score === 55) {
               box.append(
@@ -299,7 +300,8 @@
               if (['A', 'B', 'C', 'D'].includes(band)) {
                 ratingMessage = "Unfortunately your EPC rating is too high at this time to qualify. Only ratings of E or below are currently eligible. If you believe this rating is incorrect, please email clientservices@resg.uk and we'll take a closer look to see if we can help.";
               } else if (band === 'E') {
-                ratingMessage = "E rated homes currently qualify around 50% of the time since funding limitations were introduced in August 2025. It is certainly worth completing the form and speaking with our consultants who will advise you what may be available to you.";
+                isERating = true;
+                ratingMessage = "Only F and G qualify at this time, however if you submit this form you will be added to our priority list for the upcoming Warm Homes Plan, and receive automatic updates on the upcoming scheme.";
               } else if (['F', 'G'].includes(band)) {
                 ratingMessage = "Your home is rated within the lowest two energy performance bands and has a high probability of securing funding at this time, provided no improvements have been made since the certificate was issued.";
               }
@@ -327,10 +329,20 @@
             );
           }
 
-          const cont = el("button", { id: "epc-continue", className: "govuk-button" }, "Continue");
           const back = backButton(viewStep1);
-          stepWrap.append(cont, back);
-          cont.onclick = () => viewStep3();
+
+          if (isERating) {
+            // E-rated homes get two options: Finish (disqualify) or Continue (priority list)
+            const finishBtn = el("button", { id: "epc-finish", className: "govuk-button govuk-button--secondary" }, "Finish");
+            const continueBtn = el("button", { id: "epc-continue", className: "govuk-button" }, "Continue");
+            stepWrap.append(el("div", { className: "epc-button-group" }, finishBtn, continueBtn), back);
+            finishBtn.onclick = () => showDisqualify();
+            continueBtn.onclick = () => viewStep3();
+          } else {
+            const cont = el("button", { id: "epc-continue", className: "govuk-button" }, "Continue");
+            stepWrap.append(cont, back);
+            cont.onclick = () => viewStep3();
+          }
 
         } catch (_) {
           $("#epc-box").innerHTML = "Lookup failed. We can still proceed.";

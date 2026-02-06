@@ -147,6 +147,17 @@ button.govuk-button--secondary {
   color: var(--resg-text) !important;
 }
 
+/* E-rating button group (Finish / Continue) */
+.epc-button-group {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.epc-button-group button {
+  flex: 1;
+}
+
 /* ---------------------------------------------------
       COMMITMENT BOX
 ----------------------------------------------------- */
