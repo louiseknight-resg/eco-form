@@ -264,6 +264,7 @@
           state.epc = out || { found: false };
           const box = $("#epc-box");
           box.innerHTML = "";
+          let isERating = false;
 
           if (out.found) {
             const band  = out.band || "N/A";
@@ -281,7 +282,6 @@
 
             // Get conditional message based on rating band
             let ratingMessage = '';
-            let isERating = false;
             // Special handling for D55 - show conditional eligibility (no ratingMessage)
             if (band === 'D' && score === 55) {
               box.append(
